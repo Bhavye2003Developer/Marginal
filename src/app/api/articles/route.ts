@@ -16,16 +16,14 @@ export async function GET(req: NextRequest) {
   if (tag) query.tags = tag;
   if (collectionId && ObjectId.isValid(collectionId))
     query.collectionIds = new ObjectId(collectionId);
+  if (search) query.$text = { $search: search };
 
-  let cursor = db.collection("articles").find(query);
-
-  if (search) {
-    const textQuery: Record<string, unknown> = { $text: { $search: search } };
-    if (tag) textQuery.tags = tag;
-    cursor = db.collection("articles").find(textQuery);
-  }
-
-  const articles = await cursor.sort({ savedAt: -1 }).limit(100).toArray();
+  const articles = await db
+    .collection("articles")
+    .find(query)
+    .sort({ savedAt: -1 })
+    .limit(100)
+    .toArray();
   return NextResponse.json(articles);
 }
 
