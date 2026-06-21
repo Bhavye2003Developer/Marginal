@@ -10,12 +10,12 @@ const EMOJI: Record<string, string> = {
 export function generateMarkdown(highlights: Highlight[], articles: Article[]): string {
   if (highlights.length === 0) return "";
 
-  const articleMap = new Map(articles.map((a) => [a._id.toString(), a]));
+  const articleMap = new Map(articles.map((a) => [a.id, a]));
 
   // Group highlights by article
   const grouped = new Map<string, Highlight[]>();
   for (const h of highlights) {
-    const key = h.articleId.toString();
+    const key = h.articleId;
     if (!grouped.has(key)) grouped.set(key, []);
     grouped.get(key)!.push(h);
   }

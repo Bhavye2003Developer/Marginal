@@ -305,3 +305,6 @@ more natural given tooling, but dependencies flow roughly this way):
 6. Focus mode
 7. Highlights view (app-level) with tag/article filtering
 8. Export to Markdown
+
+
+claude --resume 824fb3f2-3d04-47d3-85f5-5976d0b93ec0

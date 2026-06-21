@@ -1,20 +1,19 @@
 import { generateMarkdown } from "@/lib/export";
-import { ObjectId } from "mongodb";
 import type { Highlight, Article } from "@/lib/types";
 
-const aid = new ObjectId();
+const aid = "aaaaaaaa-0000-0000-0000-000000000001";
 
 function makeArticle(overrides: Partial<Article> = {}): Article {
   return {
-    _id: aid,
+    id: aid,
     type: "article",
     title: "Test Article",
     sourceUrl: "https://example.com",
     status: "unread",
     tags: ["tech"],
     collectionIds: [],
-    savedAt: new Date("2026-01-15"),
-    updatedAt: new Date("2026-01-15"),
+    savedAt: "2026-01-15T00:00:00.000Z",
+    updatedAt: "2026-01-15T00:00:00.000Z",
     content: null,
     images: null,
     fileUrl: null,
@@ -26,12 +25,12 @@ function makeArticle(overrides: Partial<Article> = {}): Article {
 
 function makeHighlight(overrides: Partial<Highlight> = {}): Highlight {
   return {
-    _id: new ObjectId(),
+    id: "bbbbbbbb-0000-0000-0000-000000000001",
     articleId: aid,
     color: "yellow",
     text: "highlighted passage",
     note: null,
-    createdAt: new Date("2026-01-16"),
+    createdAt: "2026-01-16T00:00:00.000Z",
     anchor: { blockId: "b0", startOffset: 0, endOffset: 5, page: null, rects: null },
     ...overrides,
   };

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ObjectId } from "mongodb";
-import { getDb } from "@/lib/mongodb";
+import { getSupabase, toArticle } from "@/lib/supabase";
 import { extractArticle } from "@/lib/readability";
 import { assignBlockIds } from "@/lib/block-ids";
 
@@ -11,20 +10,21 @@ export async function GET(req: NextRequest) {
   const collectionId = searchParams.get("collectionId");
   const search = searchParams.get("search");
 
-  const db = await getDb();
-  const query: Record<string, unknown> = { status };
-  if (tag) query.tags = tag;
-  if (collectionId && ObjectId.isValid(collectionId))
-    query.collectionIds = new ObjectId(collectionId);
-  if (search) query.$text = { $search: search };
+  const sb = getSupabase();
+  let query = sb
+    .from("articles")
+    .select("*")
+    .eq("status", status)
+    .order("saved_at", { ascending: false })
+    .limit(200);
 
-  const articles = await db
-    .collection("articles")
-    .find(query)
-    .sort({ savedAt: -1 })
-    .limit(100)
-    .toArray();
-  return NextResponse.json(articles);
+  if (tag) query = query.contains("tags", [tag]);
+  if (collectionId) query = query.contains("collection_ids", [collectionId]);
+  if (search) query = query.textSearch("search_vector", search, { type: "websearch" });
+
+  const { data, error } = await query;
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json((data ?? []).map(toArticle));
 }
 
 export async function POST(req: NextRequest) {
@@ -42,24 +42,28 @@ export async function POST(req: NextRequest) {
   }
 
   const content = assignBlockIds(extracted.content);
-  const now = new Date();
-  const doc = {
-    type: "article" as const,
-    title: extracted.title,
-    sourceUrl: body.url,
-    status: "unread" as const,
-    tags: [],
-    collectionIds: [],
-    savedAt: now,
-    updatedAt: now,
-    content,
-    images: extracted.images,
-    fileUrl: null,
-    pageCount: null,
-    searchableText: null,
-  };
+  const now = new Date().toISOString();
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from("articles")
+    .insert({
+      type: "article",
+      title: extracted.title,
+      source_url: body.url,
+      status: "unread",
+      tags: [],
+      collection_ids: [],
+      saved_at: now,
+      updated_at: now,
+      content,
+      images: extracted.images,
+      file_url: null,
+      page_count: null,
+      searchable_text: null,
+    })
+    .select()
+    .single();
 
-  const db = await getDb();
-  const result = await db.collection("articles").insertOne(doc);
-  return NextResponse.json({ ...doc, _id: result.insertedId }, { status: 201 });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(toArticle(data), { status: 201 });
 }

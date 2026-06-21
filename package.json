@@ -13,8 +13,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1073.0",
     "@mozilla/readability": "^0.6.0",
+    "@supabase/supabase-js": "^2.49.4",
     "jsdom": "^29.1.1",
-    "mongodb": "^7.3.0",
     "next": "16.2.9",
     "pdfjs-dist": "^3.11.174",
     "react": "19.2.4",
@@ -36,7 +36,6 @@
     "eslint-config-next": "16.2.9",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
-    "mongodb-memory-server": "^11.2.0",
     "tailwindcss": "^4",
     "ts-jest": "^29.4.11",
     "typescript": "^5"
