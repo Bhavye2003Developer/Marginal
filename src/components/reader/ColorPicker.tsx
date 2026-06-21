@@ -3,9 +3,9 @@ import { useEffect, useRef } from "react";
 
 const COLORS = [
   { id: "yellow" as const, bg: "#FCD34D", label: "Yellow" },
-  { id: "green" as const, bg: "#34D399", label: "Green" },
-  { id: "blue" as const, bg: "#60A5FA", label: "Blue" },
-  { id: "pink" as const, bg: "#F472B6", label: "Pink" },
+  { id: "green"  as const, bg: "#34D399", label: "Green" },
+  { id: "blue"   as const, bg: "#60A5FA", label: "Blue" },
+  { id: "pink"   as const, bg: "#F472B6", label: "Pink" },
 ];
 
 interface Props {
@@ -36,17 +36,13 @@ export default function ColorPicker({ rect, onSelect, onDismiss }: Props) {
   return (
     <div
       ref={ref}
+      className="color-picker-popup"
       style={{
         position: "absolute",
         top,
         left,
         display: "flex",
         gap: 8,
-        background: "#ffffff",
-        border: "1px solid #E8E6E1",
-        borderRadius: 12,
-        padding: "10px 14px",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
         zIndex: 50,
       }}
     >
@@ -62,10 +58,11 @@ export default function ColorPicker({ rect, onSelect, onDismiss }: Props) {
             background: c.bg,
             border: "2px solid transparent",
             cursor: "pointer",
-            transition: "transform 0.1s ease, border-color 0.1s ease",
+            transition: "transform 0.1s ease",
+            flexShrink: 0,
           }}
-          onMouseEnter={(e) => { (e.target as HTMLElement).style.transform = "scale(1.15)"; }}
-          onMouseLeave={(e) => { (e.target as HTMLElement).style.transform = "scale(1)"; }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = "scale(1.18)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
         />
       ))}
     </div>

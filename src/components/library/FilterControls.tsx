@@ -22,40 +22,18 @@ export default function FilterControls({
 }: Props) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Status tabs */}
-      <div
-        style={{
-          display: "inline-flex",
-          background: "#F0EFE9",
-          borderRadius: 8,
-          padding: 3,
-          gap: 2,
-          alignSelf: "flex-start",
-        }}
-      >
+      <div className="status-toggle">
         {(["unread", "archived"] as const).map((s) => (
           <button
             key={s}
             onClick={() => onStatusChange(s)}
-            style={{
-              padding: "6px 14px",
-              borderRadius: 6,
-              fontSize: 13,
-              fontWeight: 500,
-              border: "none",
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-              background: status === s ? "#ffffff" : "transparent",
-              color: status === s ? "#1A1A1A" : "#6B6B6B",
-              boxShadow: status === s ? "0 1px 3px rgba(0,0,0,0.10)" : "none",
-            }}
+            className={`status-toggle-btn${status === s ? " active" : ""}`}
           >
             {s === "unread" ? "Inbox" : "Archived"}
           </button>
         ))}
       </div>
 
-      {/* Search */}
       <div>
         <p className="section-label">Search</p>
         <input
@@ -68,7 +46,6 @@ export default function FilterControls({
         />
       </div>
 
-      {/* Collections */}
       {collections && collections.length > 0 && (
         <div>
           <p className="section-label">Collection</p>
@@ -86,50 +63,28 @@ export default function FilterControls({
         </div>
       )}
 
-      {/* Tags */}
       {allTags.length > 0 && (
         <div>
           <p className="section-label">Tags</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            <FilterTag
-              active={!selectedTag}
+            <button
+              className={`filter-tag${!selectedTag ? " active" : ""}`}
               onClick={() => onTagChange(null)}
-              label="All"
-            />
+            >
+              All
+            </button>
             {allTags.map((t) => (
-              <FilterTag
+              <button
                 key={t}
-                active={selectedTag === t}
+                className={`filter-tag${selectedTag === t ? " active" : ""}`}
                 onClick={() => onTagChange(t === selectedTag ? null : t)}
-                label={t}
-              />
+              >
+                {t}
+              </button>
             ))}
           </div>
         </div>
       )}
     </div>
-  );
-}
-
-function FilterTag({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        padding: "3px 10px",
-        borderRadius: 99,
-        fontSize: 12,
-        fontWeight: 500,
-        border: "none",
-        cursor: "pointer",
-        transition: "all 0.15s ease",
-        background: active ? "#5B5BD6" : "#F0EFE9",
-        color: active ? "#ffffff" : "#6B6B6B",
-      }}
-    >
-      {label}
-    </button>
   );
 }

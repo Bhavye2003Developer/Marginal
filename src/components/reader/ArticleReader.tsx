@@ -57,51 +57,64 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
 
   async function saveHighlight(color: "yellow" | "green" | "blue" | "pink") {
     if (!selection) return;
-    const res = await fetch("/api/highlights", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        articleId: article.id,
-        color,
-        text: selection.text,
-        anchor: { blockId: selection.blockId, startOffset: selection.startOffset, endOffset: selection.endOffset, page: null, rects: null },
-      }),
-    });
-    if (!res.ok) { console.error("Failed to save highlight", res.status); return; }
-    const h = await res.json();
-    setHighlights((prev) => [...prev, h]);
-    setSelection(null);
-    window.getSelection()?.removeAllRanges();
+    try {
+      const res = await fetch("/api/highlights", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          articleId: article.id,
+          color,
+          text: selection.text,
+          anchor: { blockId: selection.blockId, startOffset: selection.startOffset, endOffset: selection.endOffset, page: null, rects: null },
+        }),
+      });
+      if (!res.ok) return;
+      const h = await res.json();
+      setHighlights((prev) => [...prev, h]);
+    } finally {
+      setSelection(null);
+      window.getSelection()?.removeAllRanges();
+    }
   }
 
   async function saveNote(id: string, note: string | null) {
-    const res = await fetch(`/api/highlights/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ note }),
-    });
-    if (!res.ok) { console.error("Failed to save note", res.status); setActiveHighlight(null); return; }
-    const updated = await res.json();
-    setHighlights((prev) => prev.map((h) => (h.id === id ? updated : h)));
-    setActiveHighlight(null);
+    try {
+      const res = await fetch(`/api/highlights/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note }),
+      });
+      if (!res.ok) return;
+      const updated = await res.json();
+      setHighlights((prev) => prev.map((h) => (h.id === id ? updated : h)));
+    } finally {
+      setActiveHighlight(null);
+    }
   }
 
   async function deleteHighlight(id: string) {
-    const res = await fetch(`/api/highlights/${id}`, { method: "DELETE" });
-    if (!res.ok) { console.error("Failed to delete highlight", res.status); return; }
-    setHighlights((prev) => prev.filter((h) => h.id !== id));
-    setActiveHighlight(null);
+    try {
+      const res = await fetch(`/api/highlights/${id}`, { method: "DELETE" });
+      if (!res.ok) return;
+      setHighlights((prev) => prev.filter((h) => h.id !== id));
+    } finally {
+      setActiveHighlight(null);
+    }
   }
 
   async function saveTags(newTags: string[]) {
     const prev = tags;
     setTags(newTags);
-    const res = await fetch(`/api/articles/${article.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tags: newTags }),
-    });
-    if (!res.ok) { console.error("Failed to save tags", res.status); setTags(prev); }
+    try {
+      const res = await fetch(`/api/articles/${article.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tags: newTags }),
+      });
+      if (!res.ok) setTags(prev);
+    } catch {
+      setTags(prev);
+    }
   }
 
   const domain = (() => {
@@ -112,25 +125,27 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
   return (
     <FocusMode active={focusMode} onToggle={() => setFocusMode((v) => !v)}>
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px" }}>
-        {/* Top bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40 }}>
           <Link
             href="/library"
-            style={{ fontSize: 13, color: "#6B6B6B", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}
+            style={{ fontSize: 13, color: "var(--text-muted)", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--accent)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; }}
           >
             ← Library
           </Link>
           <button
             onClick={() => setFocusMode((v) => !v)}
-            style={{ fontSize: 12, color: "#A8A49C", background: "none", border: "none", cursor: "pointer" }}
+            style={{ fontSize: 12, color: "var(--text-subtle)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-subtle)"; }}
           >
             {focusMode ? "Exit focus" : "Focus mode"}
           </button>
         </div>
 
-        {/* Article header */}
-        <header style={{ marginBottom: 40, paddingBottom: 32, borderBottom: "1px solid #E8E6E1" }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: "#1A1A1A", lineHeight: 1.3, marginBottom: 12 }}>
+        <header style={{ marginBottom: 40, paddingBottom: 32, borderBottom: "1px solid var(--border)" }}>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: "var(--text)", lineHeight: 1.3, marginBottom: 12 }}>
             {article.title}
           </h1>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
@@ -138,19 +153,20 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
               href={article.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ fontSize: 13, color: "#A8A49C", textDecoration: "none" }}
+              style={{ fontSize: 13, color: "var(--text-subtle)", textDecoration: "none" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--accent)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-subtle)"; }}
             >
               {domain}
             </a>
-            <span style={{ color: "#D8D5CE" }}>·</span>
-            <span style={{ fontSize: 13, color: "#A8A49C" }}>
+            <span style={{ color: "var(--border-hover)" }}>·</span>
+            <span style={{ fontSize: 13, color: "var(--text-subtle)" }}>
               {new Date(article.savedAt).toLocaleDateString("en", { year: "numeric", month: "long", day: "numeric" })}
             </span>
           </div>
           <TagInput tags={tags} onChange={saveTags} />
         </header>
 
-        {/* Content */}
         <article>
           <div onMouseUp={handleMouseUp} style={{ position: "relative" }}>
             <HighlightLayer

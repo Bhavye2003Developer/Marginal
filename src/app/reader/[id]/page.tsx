@@ -20,11 +20,11 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
 
   if (article.type === "pdf") {
     return (
-      <div style={{ maxWidth: 480, margin: "80px auto", textAlign: "center", color: "#6B6B6B", padding: "0 24px" }}>
+      <div style={{ maxWidth: 480, margin: "80px auto", textAlign: "center", color: "var(--text-muted)", padding: "0 24px" }}>
         <p style={{ fontSize: 40, marginBottom: 16 }}>📄</p>
-        <h2 style={{ fontSize: 18, fontWeight: 600, color: "#1A1A1A", marginBottom: 8 }}>PDF reading not supported</h2>
+        <h2 style={{ fontSize: 18, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>PDF reading not supported</h2>
         <p style={{ fontSize: 14, lineHeight: 1.6 }}>PDF reading is currently disabled. Save articles from the web instead.</p>
-        <a href="/library" style={{ display: "inline-block", marginTop: 24, fontSize: 13, color: "#5B5BD6", textDecoration: "none" }}>← Back to library</a>
+        <a href="/library" style={{ display: "inline-block", marginTop: 24, fontSize: 13, color: "var(--accent)", textDecoration: "none" }}>← Back to library</a>
       </div>
     );
   }

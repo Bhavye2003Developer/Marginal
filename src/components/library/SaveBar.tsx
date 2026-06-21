@@ -23,7 +23,8 @@ export default function SaveBar({ onSaved }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: url.trim() }),
       });
-      if (!res.ok) throw new Error((await res.json()).error ?? "Save failed");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Save failed");
       setUrl("");
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2000);
@@ -37,24 +38,24 @@ export default function SaveBar({ onSaved }: Props) {
 
   return (
     <div>
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      <form onSubmit={handleSubmit} style={{ display: "flex", gap: 8 }}>
         <input
           type="url"
           value={url}
           onChange={(e) => { setUrl(e.target.value); setError(null); }}
           placeholder="Paste a URL to save…"
-          className="input flex-1 text-[14px]"
-          style={{ padding: "10px 16px", borderRadius: 10, fontSize: 14 }}
+          className="input"
+          style={{ flex: 1, fontSize: 14, padding: "10px 16px", borderRadius: 10 }}
           autoComplete="off"
         />
         <button
           type="submit"
           disabled={saving || !url.trim()}
           className="btn-primary"
-          style={{ padding: "10px 20px", borderRadius: 10, fontSize: 14 }}
+          style={{ padding: "10px 22px", borderRadius: 10, fontSize: 14 }}
         >
           {saving ? (
-            <span className="flex items-center gap-2">
+            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
               Saving
             </span>
@@ -62,7 +63,7 @@ export default function SaveBar({ onSaved }: Props) {
         </button>
       </form>
       {error && (
-        <p className="mt-2 text-[13px] text-red-600 flex items-center gap-1.5">
+        <p style={{ marginTop: 8, fontSize: 13, color: "#E5534B", display: "flex", alignItems: "center", gap: 6 }}>
           <span>⚠</span> {error}
         </p>
       )}

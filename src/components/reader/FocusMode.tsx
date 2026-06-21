@@ -26,7 +26,7 @@ export default function FocusMode({ active, onToggle, children }: Props) {
   return (
     <div
       ref={ref}
-      style={active ? { position: "fixed", inset: 0, zIndex: 40, background: "#F9F8F6", overflowY: "auto" } : undefined}
+      style={active ? { position: "fixed", inset: 0, zIndex: 40, background: "var(--bg)", overflowY: "auto" } : undefined}
     >
       {active && (
         <div
@@ -34,19 +34,19 @@ export default function FocusMode({ active, onToggle, children }: Props) {
             position: "sticky",
             top: 0,
             zIndex: 50,
-            background: "rgba(249,248,246,0.92)",
+            background: "color-mix(in srgb, var(--bg) 90%, transparent)",
             backdropFilter: "blur(8px)",
-            borderBottom: "1px solid #E8E6E1",
+            borderBottom: "1px solid var(--border)",
             padding: "10px 24px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
           }}
         >
-          <span style={{ fontSize: 12, color: "#A8A49C" }}>Focus mode</span>
+          <span style={{ fontSize: 12, color: "var(--text-subtle)" }}>Focus mode</span>
           <button
             onClick={onToggle}
-            style={{ fontSize: 12, color: "#6B6B6B", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}
+            style={{ fontSize: 12, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", fontWeight: 500, fontFamily: "inherit" }}
           >
             Exit
           </button>

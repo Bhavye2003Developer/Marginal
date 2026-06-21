@@ -30,8 +30,8 @@ export default function TagInput({ tags, onChange }: Props) {
         display: "flex",
         flexWrap: "wrap",
         gap: 6,
-        background: "#ffffff",
-        border: "1px solid #E8E6E1",
+        background: "var(--bg-card)",
+        border: "1px solid var(--border)",
         borderRadius: 8,
         padding: "7px 12px",
         minHeight: 38,
@@ -39,11 +39,11 @@ export default function TagInput({ tags, onChange }: Props) {
         transition: "border-color 0.15s ease, box-shadow 0.15s ease",
       }}
       onFocusCapture={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = "#5B5BD6";
-        (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 3px rgba(91,91,214,0.12)";
+        (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)";
+        (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent)";
       }}
       onBlurCapture={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = "#E8E6E1";
+        (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
         (e.currentTarget as HTMLElement).style.boxShadow = "none";
       }}
     >
@@ -52,7 +52,7 @@ export default function TagInput({ tags, onChange }: Props) {
           {t}
           <button
             onClick={() => removeTag(t)}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "#5B5BD6", opacity: 0.6, padding: 0, lineHeight: 1, fontSize: 13 }}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--accent-sub-fg)", opacity: 0.7, padding: 0, lineHeight: 1, fontSize: 14, fontFamily: "inherit" }}
             aria-label={`Remove tag ${t}`}
           >
             ×
@@ -72,7 +72,7 @@ export default function TagInput({ tags, onChange }: Props) {
           flex: 1,
           minWidth: 60,
           background: "transparent",
-          color: "#1A1A1A",
+          color: "var(--text)",
           fontFamily: "inherit",
         }}
       />

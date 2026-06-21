@@ -22,7 +22,7 @@ export default function NotePopover({ highlight, onSave, onDelete, onClose }: Pr
         alignItems: "flex-end",
         justifyContent: "center",
         padding: 16,
-        background: "rgba(0,0,0,0.18)",
+        background: "rgba(0,0,0,0.35)",
         backdropFilter: "blur(4px)",
       }}
       onClick={onClose}
@@ -31,16 +31,16 @@ export default function NotePopover({ highlight, onSave, onDelete, onClose }: Pr
         style={{
           width: "100%",
           maxWidth: 480,
-          background: "#ffffff",
-          border: "1px solid #E8E6E1",
+          background: "var(--bg-card)",
+          border: "1px solid var(--border)",
           borderRadius: 16,
           padding: 20,
-          boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+          boxShadow: "var(--shadow-lg)",
           marginBottom: 16,
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <p style={{ fontSize: 13, color: "#6B6B6B", fontStyle: "italic", marginBottom: 12, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 13, color: "var(--text-muted)", fontStyle: "italic", marginBottom: 12, lineHeight: 1.6 }}>
           &ldquo;{highlight.text}&rdquo;
         </p>
         <textarea
@@ -65,15 +65,16 @@ export default function NotePopover({ highlight, onSave, onDelete, onClose }: Pr
             style={{
               padding: "8px 14px",
               borderRadius: 8,
-              border: "1px solid #FCA5A5",
+              border: "1px solid rgba(229,83,75,0.4)",
               background: "transparent",
-              color: "#DC2626",
+              color: "#E5534B",
               fontSize: 13,
               cursor: "pointer",
               transition: "background 0.15s ease",
+              fontFamily: "inherit",
             }}
-            onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#FEF2F2"; }}
-            onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "transparent"; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(229,83,75,0.1)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
           >
             Delete
           </button>

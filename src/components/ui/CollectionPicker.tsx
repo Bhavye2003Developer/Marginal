@@ -23,9 +23,8 @@ export default function CollectionPicker({ collections, selectedIds, onChange, o
     e.preventDefault();
     if (!newName.trim()) return;
     setCreating(true);
-    await onCreateCollection(newName.trim());
-    setNewName("");
-    setCreating(false);
+    try { await onCreateCollection(newName.trim()); }
+    finally { setNewName(""); setCreating(false); }
   }
 
   return (
@@ -33,13 +32,13 @@ export default function CollectionPicker({ collections, selectedIds, onChange, o
       {collections.map((c) => (
         <label
           key={c.id}
-          style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#1A1A1A", cursor: "pointer" }}
+          style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "var(--text)", cursor: "pointer" }}
         >
           <input
             type="checkbox"
             checked={selectedIds.includes(c.id)}
             onChange={() => toggle(c.id)}
-            style={{ accentColor: "#5B5BD6", width: 14, height: 14 }}
+            style={{ accentColor: "var(--accent)", width: 14, height: 14 }}
           />
           {c.name}
         </label>

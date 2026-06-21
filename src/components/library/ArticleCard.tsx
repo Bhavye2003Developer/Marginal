@@ -18,19 +18,33 @@ export default function ArticleCard({ article, onToggleStatus }: Props) {
   });
 
   return (
-    <div className="card px-5 py-4">
-      <div className="flex gap-4 items-start">
-        {/* Main content */}
-        <div className="flex-1 min-w-0">
+    <div className="card" style={{ padding: "14px 18px" }}>
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <Link
             href={`/reader/${article.id}`}
-            className="block text-[15px] font-semibold leading-snug text-[#1A1A1A] hover:text-[#5B5BD6] line-clamp-2 mb-1 transition-colors"
+            style={{
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              fontSize: 15,
+              fontWeight: 600,
+              lineHeight: 1.4,
+              color: "var(--text)",
+              textDecoration: "none",
+              marginBottom: 4,
+            } as React.CSSProperties}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--accent)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text)"; }}
           >
             {article.title}
           </Link>
-          <p className="text-[12px] text-[#A8A49C] truncate mb-2.5">{domain}</p>
+          <p style={{ fontSize: 12, color: "var(--text-subtle)", marginBottom: article.tags.length ? 8 : 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {domain}
+          </p>
           {article.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
               {article.tags.map((t) => (
                 <span key={t} className="tag">{t}</span>
               ))}
@@ -38,12 +52,13 @@ export default function ArticleCard({ article, onToggleStatus }: Props) {
           )}
         </div>
 
-        {/* Right side */}
-        <div className="shrink-0 flex flex-col items-end gap-2 pt-0.5">
-          <span className="text-[12px] text-[#A8A49C]">{dateStr}</span>
+        <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, paddingTop: 2 }}>
+          <span style={{ fontSize: 12, color: "var(--text-subtle)" }}>{dateStr}</span>
           <button
             onClick={() => onToggleStatus(article.id, article.status)}
-            className="text-[12px] text-[#A8A49C] hover:text-[#5B5BD6] transition-colors font-medium"
+            style={{ fontSize: 12, color: "var(--text-subtle)", background: "none", border: "none", cursor: "pointer", fontWeight: 500, padding: 0, fontFamily: "inherit" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--accent)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-subtle)"; }}
           >
             {article.status === "unread" ? "Archive" : "Restore"}
           </button>
