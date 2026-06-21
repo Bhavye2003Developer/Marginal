@@ -66,6 +66,7 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
         anchor: { blockId: selection.blockId, startOffset: selection.startOffset, endOffset: selection.endOffset, page: null, rects: null },
       }),
     });
+    if (!res.ok) { console.error("Failed to save highlight", res.status); return; }
     const h = await res.json();
     setHighlights((prev) => [...prev, h]);
     setSelection(null);
@@ -78,24 +79,28 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ note }),
     });
+    if (!res.ok) { console.error("Failed to save note", res.status); setActiveHighlight(null); return; }
     const updated = await res.json();
     setHighlights((prev) => prev.map((h) => (h._id.toString() === id ? updated : h)));
     setActiveHighlight(null);
   }
 
   async function deleteHighlight(id: string) {
-    await fetch(`/api/highlights/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/highlights/${id}`, { method: "DELETE" });
+    if (!res.ok) { console.error("Failed to delete highlight", res.status); return; }
     setHighlights((prev) => prev.filter((h) => h._id.toString() !== id));
     setActiveHighlight(null);
   }
 
   async function saveTags(newTags: string[]) {
+    const prev = tags;
     setTags(newTags);
-    await fetch(`/api/articles/${article._id.toString()}`, {
+    const res = await fetch(`/api/articles/${article._id.toString()}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tags: newTags }),
     });
+    if (!res.ok) { console.error("Failed to save tags", res.status); setTags(prev); }
   }
 
   return (

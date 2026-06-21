@@ -37,13 +37,10 @@ export default function HighlightLayer({ content, highlights, onHighlightClick }
     const container = ref.current;
     if (!container) return;
 
-    // Remove existing marks
-    container.querySelectorAll("mark[data-highlight-id]").forEach((m) => {
-      const parent = m.parentNode!;
-      while (m.firstChild) parent.insertBefore(m.firstChild, m);
-      parent.removeChild(m);
-    });
-    container.normalize();
+    // content is Readability-extracted server-side (scripts/event handlers stripped).
+    // We set innerHTML imperatively so React doesn't own this node and won't
+    // overwrite our <mark> elements on re-render.
+    container.innerHTML = content; // eslint-disable-line no-unsanitized/property
 
     // Apply each highlight
     for (const h of highlights) {
@@ -71,7 +68,6 @@ export default function HighlightLayer({ content, highlights, onHighlightClick }
     <div
       ref={ref}
       className="leading-relaxed text-base text-gray-800 max-w-none"
-      dangerouslySetInnerHTML={{ __html: content }}
     />
   );
 }
