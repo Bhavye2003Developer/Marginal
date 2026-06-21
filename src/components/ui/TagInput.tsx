@@ -25,11 +25,17 @@ export default function TagInput({ tags, onChange }: Props) {
   }
 
   return (
-    <div className="flex flex-wrap gap-1 border border-gray-200 rounded-md px-2 py-1 focus-within:ring-2 focus-within:ring-blue-500">
+    <div className="flex flex-wrap gap-1.5 rounded-xl border border-stone-200 bg-white px-3 py-2 focus-within:ring-2 focus-within:ring-violet-500 focus-within:border-transparent shadow-sm min-h-[2.5rem] items-center">
       {tags.map((t) => (
-        <span key={t} className="bg-gray-100 text-xs rounded px-2 py-0.5 flex items-center gap-1">
+        <span key={t} className="inline-flex items-center gap-1 rounded-full bg-violet-50 text-violet-700 px-2.5 py-0.5 text-xs font-medium">
           {t}
-          <button onClick={() => removeTag(t)} className="text-gray-400 hover:text-gray-700">×</button>
+          <button
+            onClick={() => removeTag(t)}
+            className="text-violet-400 hover:text-violet-700 transition-colors leading-none"
+            aria-label={`Remove tag ${t}`}
+          >
+            ×
+          </button>
         </span>
       ))}
       <input
@@ -38,7 +44,7 @@ export default function TagInput({ tags, onChange }: Props) {
         onKeyDown={handleKeyDown}
         onBlur={addTag}
         placeholder={tags.length === 0 ? "Add tags…" : ""}
-        className="outline-none text-xs flex-1 min-w-16 bg-transparent"
+        className="outline-none text-xs flex-1 min-w-16 bg-transparent text-stone-700 placeholder:text-stone-400"
       />
     </div>
   );

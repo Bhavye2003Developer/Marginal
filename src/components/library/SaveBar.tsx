@@ -22,10 +22,7 @@ export default function SaveBar({ onSaved }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: url.trim() }),
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? "Save failed");
-      }
+      if (!res.ok) throw new Error((await res.json()).error ?? "Save failed");
       setUrl("");
       onSaved();
     } catch (err: unknown) {
@@ -44,10 +41,7 @@ export default function SaveBar({ onSaved }: Props) {
       const form = new FormData();
       form.append("file", file);
       const res = await fetch("/api/upload", { method: "POST", body: form });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? "Upload failed");
-      }
+      if (!res.ok) throw new Error((await res.json()).error ?? "Upload failed");
       onSaved();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Upload failed");
@@ -58,19 +52,19 @@ export default function SaveBar({ onSaved }: Props) {
   }
 
   return (
-    <div className="mb-6">
+    <div>
       <form onSubmit={handleUrlSave} className="flex gap-2">
         <input
           type="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="Paste a URL to save…"
-          className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent shadow-sm"
         />
         <button
           type="submit"
-          disabled={saving}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm disabled:opacity-50"
+          disabled={saving || !url.trim()}
+          className="shrink-0 rounded-xl bg-violet-600 text-white px-5 py-2.5 text-sm font-medium hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
         >
           {saving ? "Saving…" : "Save"}
         </button>
@@ -78,13 +72,24 @@ export default function SaveBar({ onSaved }: Props) {
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={saving}
-          className="border border-gray-300 px-4 py-2 rounded-md text-sm disabled:opacity-50"
+          className="shrink-0 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 disabled:opacity-50 transition-colors shadow-sm hidden sm:block"
         >
           Upload PDF
         </button>
         <input ref={fileRef} type="file" accept=".pdf" className="hidden" onChange={handleFileChange} />
       </form>
-      {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
+      {/* Mobile PDF upload button */}
+      <button
+        type="button"
+        onClick={() => fileRef.current?.click()}
+        disabled={saving}
+        className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 disabled:opacity-50 transition-colors shadow-sm sm:hidden"
+      >
+        Upload PDF
+      </button>
+      {error && (
+        <p className="mt-2 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+      )}
     </div>
   );
 }

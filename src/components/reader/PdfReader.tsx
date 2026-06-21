@@ -113,7 +113,7 @@ export default function PdfReader({ article, highlights: initial }: Props) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        articleId: article._id.toString(),
+        articleId: article.id,
         color,
         text: selection.text,
         anchor: { blockId: null, startOffset: null, endOffset: null, page: selection.page, rects: selection.rects },
@@ -134,21 +134,21 @@ export default function PdfReader({ article, highlights: initial }: Props) {
     });
     if (!res.ok) { console.error("Failed to save note", res.status); setActiveHighlight(null); return; }
     const updated = await res.json();
-    setHighlights((prev) => prev.map((h) => (h._id.toString() === id ? updated : h)));
+    setHighlights((prev) => prev.map((h) => (h.id === id ? updated : h)));
     setActiveHighlight(null);
   }
 
   async function deleteHighlight(id: string) {
     const res = await fetch(`/api/highlights/${id}`, { method: "DELETE" });
     if (!res.ok) { console.error("Failed to delete highlight", res.status); return; }
-    setHighlights((prev) => prev.filter((h) => h._id.toString() !== id));
+    setHighlights((prev) => prev.filter((h) => h.id !== id));
     setActiveHighlight(null);
   }
 
   async function saveTags(newTags: string[]) {
     const prev = tags;
     setTags(newTags);
-    const res = await fetch(`/api/articles/${article._id.toString()}`, {
+    const res = await fetch(`/api/articles/${article.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tags: newTags }),
@@ -159,12 +159,21 @@ export default function PdfReader({ article, highlights: initial }: Props) {
   return (
     <FocusMode active={focusMode} onToggle={() => setFocusMode((v) => !v)}>
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold">{article.title}</h1>
-          <p className="text-sm text-gray-500">{article.sourceUrl} · {numPages} pages</p>
-          <div className="mt-2">
-            <TagInput tags={tags} onChange={saveTags} />
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <a href="/library" className="text-sm text-stone-500 hover:text-violet-600 transition-colors flex items-center gap-1">
+              ← Library
+            </a>
           </div>
+          <h1 className="text-3xl font-bold text-stone-900 leading-tight mb-3">{article.title}</h1>
+          <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500 mb-4">
+            <a href={article.sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:text-violet-600 transition-colors truncate max-w-xs">
+              {article.sourceUrl}
+            </a>
+            <span>·</span>
+            <span>{numPages} page{numPages !== 1 ? "s" : ""}</span>
+          </div>
+          <TagInput tags={tags} onChange={saveTags} />
         </div>
 
         {Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => {
@@ -210,8 +219,8 @@ export default function PdfReader({ article, highlights: initial }: Props) {
         {activeHighlight && (
           <NotePopover
             highlight={activeHighlight}
-            onSave={(note) => saveNote(activeHighlight._id.toString(), note)}
-            onDelete={() => deleteHighlight(activeHighlight._id.toString())}
+            onSave={(note) => saveNote(activeHighlight.id, note)}
+            onDelete={() => deleteHighlight(activeHighlight.id)}
             onClose={() => setActiveHighlight(null)}
           />
         )}

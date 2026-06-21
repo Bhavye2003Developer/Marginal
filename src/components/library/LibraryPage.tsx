@@ -47,32 +47,52 @@ export default function LibraryPage() {
   const allTags = Array.from(new Set(articles.flatMap((a) => a.tags)));
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Marginal</h1>
-      <SaveBar onSaved={fetchArticles} />
-      <FilterControls
-        status={status}
-        onStatusChange={(s) => { setStatus(s); setSelectedTag(null); }}
-        search={search}
-        onSearchChange={setSearch}
-        allTags={allTags}
-        selectedTag={selectedTag}
-        onTagChange={setSelectedTag}
-        collections={collections}
-        selectedCollectionId={selectedCollectionId}
-        onCollectionChange={setSelectedCollectionId}
-      />
-      {loading ? (
-        <p className="text-gray-400 text-sm">Loading…</p>
-      ) : articles.length === 0 ? (
-        <p className="text-gray-400 text-sm">No articles yet. Save a URL above.</p>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {articles.map((a) => (
-            <ArticleCard key={a._id.toString()} article={a} onToggleStatus={toggleStatus} />
-          ))}
-        </div>
-      )}
-    </main>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Save bar at top */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-stone-900 mb-4">Your Library</h1>
+        <SaveBar onSaved={fetchArticles} />
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Sidebar filters */}
+        <aside className="w-full md:w-56 shrink-0">
+          <FilterControls
+            status={status}
+            onStatusChange={(s) => { setStatus(s); setSelectedTag(null); setSelectedCollectionId(null); }}
+            search={search}
+            onSearchChange={setSearch}
+            allTags={allTags}
+            selectedTag={selectedTag}
+            onTagChange={setSelectedTag}
+            collections={collections}
+            selectedCollectionId={selectedCollectionId}
+            onCollectionChange={setSelectedCollectionId}
+          />
+        </aside>
+
+        {/* Article list */}
+        <main className="flex-1 min-w-0">
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="w-6 h-6 border-2 border-violet-600 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : articles.length === 0 ? (
+            <div className="text-center py-16 text-stone-400">
+              <p className="text-4xl mb-3">◈</p>
+              <p className="text-sm">
+                {status === "unread" ? "No articles yet. Paste a URL above to get started." : "Nothing archived yet."}
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {articles.map((a) => (
+                <ArticleCard key={a.id} article={a} onToggleStatus={toggleStatus} />
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
+    </div>
   );
 }

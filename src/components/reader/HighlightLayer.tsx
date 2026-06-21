@@ -25,7 +25,6 @@ function findNodeAtOffset(root: Element, target: number): { node: Text; offset: 
     cur += len;
     node = walker.nextNode() as Text | null;
   }
-  // fallback to last node end
   const last = walker.currentNode as Text;
   return { node: last, offset: last?.textContent?.length ?? 0 };
 }
@@ -42,7 +41,6 @@ export default function HighlightLayer({ content, highlights, onHighlightClick }
     // overwrite our <mark> elements on re-render.
     container.innerHTML = content; // eslint-disable-line no-unsanitized/property
 
-    // Apply each highlight
     for (const h of highlights) {
       if (!h.anchor.blockId || h.anchor.startOffset == null || h.anchor.endOffset == null) continue;
       const block = container.querySelector(`[data-block-id="${h.anchor.blockId}"]`);
@@ -55,7 +53,7 @@ export default function HighlightLayer({ content, highlights, onHighlightClick }
         range.setEnd(en, eo);
         const mark = document.createElement("mark");
         mark.className = `${COLOR_CLASS[h.color] ?? "bg-yellow-200"} cursor-pointer rounded-sm`;
-        mark.dataset.highlightId = h._id.toString();
+        mark.dataset.highlightId = h.id;
         mark.addEventListener("click", () => onHighlightClick(h));
         range.surroundContents(mark);
       } catch {
@@ -64,10 +62,5 @@ export default function HighlightLayer({ content, highlights, onHighlightClick }
     }
   }, [highlights, content]);
 
-  return (
-    <div
-      ref={ref}
-      className="leading-relaxed text-base text-gray-800 max-w-none"
-    />
-  );
+  return <div ref={ref} className="prose-reader" />;
 }

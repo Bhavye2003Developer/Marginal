@@ -32,70 +32,85 @@ export default function HighlightsPage() {
     if (selectedTag) params.set("tag", selectedTag);
     if (selectedArticleId) params.set("articleId", selectedArticleId);
     const raw: Highlight[] = await fetch(`/api/highlights?${params}`).then((r) => r.json());
-    const articleMap = new Map(articles.map((a) => [a._id.toString(), a.title]));
+    const articleMap = new Map(articles.map((a) => [a.id, a.title]));
     const enriched = raw.map((h) => ({
       ...h,
-      articleTitle: articleMap.get(h.articleId.toString()) ?? "Unknown",
+      articleTitle: articleMap.get(h.articleId) ?? "Unknown",
     }));
     setHighlights(enriched);
     setLoading(false);
   }, [selectedTag, selectedArticleId, articles]);
 
-  useEffect(() => {
-    fetchHighlights();
-  }, [fetchHighlights]);
+  useEffect(() => { fetchHighlights(); }, [fetchHighlights]);
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Highlights</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-stone-900">Highlights</h1>
+          {highlights.length > 0 && (
+            <p className="text-sm text-stone-500 mt-0.5">{highlights.length} highlight{highlights.length !== 1 ? "s" : ""}</p>
+          )}
+        </div>
         <ExportButton highlights={highlights} articles={articles} />
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-5">
-        <select
-          value={selectedArticleId ?? ""}
-          onChange={(e) => setSelectedArticleId(e.target.value || null)}
-          className="border border-gray-300 rounded-md px-2 py-1.5 text-sm"
-        >
-          <option value="">All articles</option>
-          {articles.map((a) => (
-            <option key={a._id.toString()} value={a._id.toString()}>{a.title}</option>
-          ))}
-        </select>
-
-        {allTags.length > 0 && (
-          <div className="flex gap-1 flex-wrap">
-            <button
-              onClick={() => setSelectedTag(null)}
-              className={`text-xs px-2 py-1 rounded ${!selectedTag ? "bg-blue-600 text-white" : "bg-gray-100"}`}
-            >
-              All tags
-            </button>
-            {allTags.map((t) => (
-              <button
-                key={t}
-                onClick={() => setSelectedTag(t === selectedTag ? null : t)}
-                className={`text-xs px-2 py-1 rounded ${selectedTag === t ? "bg-blue-600 text-white" : "bg-gray-100 hover:bg-gray-200"}`}
-              >
-                {t}
-              </button>
+      {/* Filters */}
+      <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-4 mb-6 flex flex-wrap gap-3">
+        <div className="flex-1 min-w-[180px]">
+          <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Article</label>
+          <select
+            value={selectedArticleId ?? ""}
+            onChange={(e) => setSelectedArticleId(e.target.value || null)}
+            className="w-full rounded-xl border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+          >
+            <option value="">All articles</option>
+            {articles.map((a) => (
+              <option key={a.id} value={a.id}>{a.title}</option>
             ))}
+          </select>
+        </div>
+        {allTags.length > 0 && (
+          <div className="flex-1 min-w-[180px]">
+            <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Tag</label>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setSelectedTag(null)}
+                className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${!selectedTag ? "bg-violet-600 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"}`}
+              >
+                All
+              </button>
+              {allTags.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setSelectedTag(t === selectedTag ? null : t)}
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${selectedTag === t ? "bg-violet-600 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"}`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
+      {/* List */}
       {loading ? (
-        <p className="text-gray-400 text-sm">Loading…</p>
+        <div className="flex items-center justify-center py-16">
+          <div className="w-6 h-6 border-2 border-violet-600 border-t-transparent rounded-full animate-spin" />
+        </div>
       ) : highlights.length === 0 ? (
-        <p className="text-gray-400 text-sm">No highlights yet.</p>
+        <div className="text-center py-16 text-stone-400">
+          <p className="text-4xl mb-3">✦</p>
+          <p className="text-sm">No highlights yet. Select text in any article to highlight it.</p>
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
           {highlights.map((h) => (
-            <HighlightRow key={h._id.toString()} highlight={h} />
+            <HighlightRow key={h.id} highlight={h} />
           ))}
         </div>
       )}
-    </main>
+    </div>
   );
 }

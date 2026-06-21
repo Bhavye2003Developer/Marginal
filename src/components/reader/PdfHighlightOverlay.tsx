@@ -23,7 +23,7 @@ export default function PdfHighlightOverlay({ highlights, page, pageWidth, pageH
       {pageHighlights.map((h) =>
         h.anchor.rects!.map((rect, i) => (
           <div
-            key={`${h._id.toString()}-${i}`}
+            key={`${h.id}-${i}`}
             onClick={() => onHighlightClick(h)}
             style={{
               position: "absolute",

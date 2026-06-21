@@ -2,10 +2,10 @@
 import { useEffect, useRef } from "react";
 
 const COLORS = [
-  { id: "yellow" as const, label: "Yellow", cls: "bg-yellow-300" },
-  { id: "green" as const, label: "Green", cls: "bg-green-300" },
-  { id: "blue" as const, label: "Blue", cls: "bg-blue-300" },
-  { id: "pink" as const, label: "Pink", cls: "bg-pink-300" },
+  { id: "yellow" as const, bg: "bg-yellow-300", label: "Yellow" },
+  { id: "green" as const, bg: "bg-green-400", label: "Green" },
+  { id: "blue" as const, bg: "bg-blue-400", label: "Blue" },
+  { id: "pink" as const, bg: "bg-pink-400", label: "Pink" },
 ];
 
 interface Props {
@@ -18,28 +18,35 @@ export default function ColorPicker({ rect, onSelect, onDismiss }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onDismiss();
+    }
+    function onMouseDown(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) onDismiss();
     }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("mousedown", onMouseDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("mousedown", onMouseDown);
+    };
   }, [onDismiss]);
 
-  const top = rect.top + window.scrollY - 48;
-  const left = rect.left + rect.width / 2 - 72;
+  const top = rect.top + window.scrollY - 52;
+  const left = rect.left + rect.width / 2 - 88;
 
   return (
     <div
       ref={ref}
-      style={{ position: "absolute", top, left, zIndex: 50 }}
-      className="flex gap-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2"
+      style={{ position: "absolute", top, left }}
+      className="flex gap-1.5 bg-white rounded-2xl shadow-xl border border-stone-200 px-3 py-2.5 z-50"
     >
       {COLORS.map((c) => (
         <button
           key={c.id}
-          title={c.label}
           onClick={() => onSelect(c.id)}
-          className={`w-7 h-7 rounded-full ${c.cls} hover:scale-110 transition-transform border border-white shadow`}
+          title={c.label}
+          className={`w-7 h-7 rounded-full ${c.bg} hover:scale-110 transition-transform ring-2 ring-transparent hover:ring-stone-300`}
         />
       ))}
     </div>
