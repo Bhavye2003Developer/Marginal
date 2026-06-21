@@ -111,36 +111,48 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
 
   return (
     <FocusMode active={focusMode} onToggle={() => setFocusMode((v) => !v)}>
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        {/* Back + Focus Mode */}
-        <div className="flex items-center justify-between mb-8">
-          <Link href="/library" className="text-sm text-stone-500 hover:text-violet-600 transition-colors flex items-center gap-1">
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px" }}>
+        {/* Top bar */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40 }}>
+          <Link
+            href="/library"
+            style={{ fontSize: 13, color: "#6B6B6B", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}
+          >
             ← Library
           </Link>
           <button
             onClick={() => setFocusMode((v) => !v)}
-            className="text-xs text-stone-500 hover:text-violet-600 transition-colors"
+            style={{ fontSize: 12, color: "#A8A49C", background: "none", border: "none", cursor: "pointer" }}
           >
             {focusMode ? "Exit focus" : "Focus mode"}
           </button>
         </div>
 
         {/* Article header */}
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-stone-900 leading-tight mb-3">{article.title}</h1>
-          <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500 mb-4">
-            <a href={article.sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:text-violet-600 transition-colors">
+        <header style={{ marginBottom: 40, paddingBottom: 32, borderBottom: "1px solid #E8E6E1" }}>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: "#1A1A1A", lineHeight: 1.3, marginBottom: 12 }}>
+            {article.title}
+          </h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <a
+              href={article.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: 13, color: "#A8A49C", textDecoration: "none" }}
+            >
               {domain}
             </a>
-            <span>·</span>
-            <span>{new Date(article.savedAt).toLocaleDateString("en", { year: "numeric", month: "long", day: "numeric" })}</span>
+            <span style={{ color: "#D8D5CE" }}>·</span>
+            <span style={{ fontSize: 13, color: "#A8A49C" }}>
+              {new Date(article.savedAt).toLocaleDateString("en", { year: "numeric", month: "long", day: "numeric" })}
+            </span>
           </div>
           <TagInput tags={tags} onChange={saveTags} />
         </header>
 
-        {/* Article content */}
+        {/* Content */}
         <article>
-          <div onMouseUp={handleMouseUp} className="relative">
+          <div onMouseUp={handleMouseUp} style={{ position: "relative" }}>
             <HighlightLayer
               content={article.content ?? ""}
               highlights={highlights}

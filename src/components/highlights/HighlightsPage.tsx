@@ -44,25 +44,27 @@ export default function HighlightsPage() {
   useEffect(() => { fetchHighlights(); }, [fetchHighlights]);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
+    <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 24px" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 32 }}>
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">Highlights</h1>
-          {highlights.length > 0 && (
-            <p className="text-sm text-stone-500 mt-0.5">{highlights.length} highlight{highlights.length !== 1 ? "s" : ""}</p>
-          )}
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#1A1A1A", marginBottom: 4 }}>Highlights</h1>
+          <p style={{ fontSize: 14, color: "#A8A49C" }}>
+            {highlights.length > 0 ? `${highlights.length} highlight${highlights.length !== 1 ? "s" : ""}` : "Select text in any article to highlight it"}
+          </p>
         </div>
         <ExportButton highlights={highlights} articles={articles} />
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-4 mb-6 flex flex-wrap gap-3">
-        <div className="flex-1 min-w-[180px]">
-          <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Article</label>
+      <div className="card" style={{ padding: "16px 20px", marginBottom: 24, display: "flex", flexWrap: "wrap", gap: 16 }}>
+        <div style={{ flex: 1, minWidth: 180 }}>
+          <p className="section-label">Article</p>
           <select
             value={selectedArticleId ?? ""}
             onChange={(e) => setSelectedArticleId(e.target.value || null)}
-            className="w-full rounded-xl border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className="input"
+            style={{ fontSize: 13 }}
           >
             <option value="">All articles</option>
             {articles.map((a) => (
@@ -71,24 +73,31 @@ export default function HighlightsPage() {
           </select>
         </div>
         {allTags.length > 0 && (
-          <div className="flex-1 min-w-[180px]">
-            <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Tag</label>
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                onClick={() => setSelectedTag(null)}
-                className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${!selectedTag ? "bg-violet-600 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"}`}
-              >
-                All
-              </button>
-              {allTags.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setSelectedTag(t === selectedTag ? null : t)}
-                  className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${selectedTag === t ? "bg-violet-600 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"}`}
-                >
-                  {t}
-                </button>
-              ))}
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <p className="section-label">Tag</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {["All", ...allTags].map((t) => {
+                const active = t === "All" ? !selectedTag : selectedTag === t;
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setSelectedTag(t === "All" ? null : (t === selectedTag ? null : t))}
+                    style={{
+                      padding: "3px 10px",
+                      borderRadius: 99,
+                      fontSize: 12,
+                      fontWeight: 500,
+                      border: "none",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                      background: active ? "#5B5BD6" : "#F0EFE9",
+                      color: active ? "#ffffff" : "#6B6B6B",
+                    }}
+                  >
+                    {t}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -96,16 +105,16 @@ export default function HighlightsPage() {
 
       {/* List */}
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <div className="w-6 h-6 border-2 border-violet-600 border-t-transparent rounded-full animate-spin" />
+        <div style={{ display: "flex", justifyContent: "center", padding: "64px 0" }}>
+          <div className="spinner" />
         </div>
       ) : highlights.length === 0 ? (
-        <div className="text-center py-16 text-stone-400">
-          <p className="text-4xl mb-3">✦</p>
-          <p className="text-sm">No highlights yet. Select text in any article to highlight it.</p>
+        <div style={{ textAlign: "center", padding: "64px 0", color: "#A8A49C" }}>
+          <p style={{ fontSize: 32, marginBottom: 12 }}>✦</p>
+          <p style={{ fontSize: 14 }}>No highlights yet. Select text in any article to highlight it.</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {highlights.map((h) => (
             <HighlightRow key={h.id} highlight={h} />
           ))}

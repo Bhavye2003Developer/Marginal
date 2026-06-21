@@ -25,13 +25,34 @@ export default function TagInput({ tags, onChange }: Props) {
   }
 
   return (
-    <div className="flex flex-wrap gap-1.5 rounded-xl border border-stone-200 bg-white px-3 py-2 focus-within:ring-2 focus-within:ring-violet-500 focus-within:border-transparent shadow-sm min-h-[2.5rem] items-center">
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 6,
+        background: "#ffffff",
+        border: "1px solid #E8E6E1",
+        borderRadius: 8,
+        padding: "7px 12px",
+        minHeight: 38,
+        alignItems: "center",
+        transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+      }}
+      onFocusCapture={(e) => {
+        (e.currentTarget as HTMLElement).style.borderColor = "#5B5BD6";
+        (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 3px rgba(91,91,214,0.12)";
+      }}
+      onBlurCapture={(e) => {
+        (e.currentTarget as HTMLElement).style.borderColor = "#E8E6E1";
+        (e.currentTarget as HTMLElement).style.boxShadow = "none";
+      }}
+    >
       {tags.map((t) => (
-        <span key={t} className="inline-flex items-center gap-1 rounded-full bg-violet-50 text-violet-700 px-2.5 py-0.5 text-xs font-medium">
+        <span key={t} className="tag">
           {t}
           <button
             onClick={() => removeTag(t)}
-            className="text-violet-400 hover:text-violet-700 transition-colors leading-none"
+            style={{ background: "none", border: "none", cursor: "pointer", color: "#5B5BD6", opacity: 0.6, padding: 0, lineHeight: 1, fontSize: 13 }}
             aria-label={`Remove tag ${t}`}
           >
             ×
@@ -44,7 +65,16 @@ export default function TagInput({ tags, onChange }: Props) {
         onKeyDown={handleKeyDown}
         onBlur={addTag}
         placeholder={tags.length === 0 ? "Add tags…" : ""}
-        className="outline-none text-xs flex-1 min-w-16 bg-transparent text-stone-700 placeholder:text-stone-400"
+        style={{
+          outline: "none",
+          border: "none",
+          fontSize: 13,
+          flex: 1,
+          minWidth: 60,
+          background: "transparent",
+          color: "#1A1A1A",
+          fontFamily: "inherit",
+        }}
       />
     </div>
   );

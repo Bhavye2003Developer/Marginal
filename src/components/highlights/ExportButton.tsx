@@ -24,10 +24,13 @@ export default function ExportButton({ highlights, articles }: Props) {
     <button
       onClick={handleExport}
       disabled={highlights.length === 0}
-      className="rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-colors"
+      className="btn-ghost"
+      style={{ fontSize: 13 }}
     >
       Export .md
-      {highlights.length > 0 && <span className="ml-1 text-stone-400">({highlights.length})</span>}
+      {highlights.length > 0 && (
+        <span style={{ color: "#A8A49C", marginLeft: 4 }}>({highlights.length})</span>
+      )}
     </button>
   );
 }

@@ -13,36 +13,74 @@ export default function NotePopover({ highlight, onSave, onDelete, onClose }: Pr
   const [note, setNote] = useState(highlight.note ?? "");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/20 backdrop-blur-sm" onClick={onClose}>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 50,
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+        padding: 16,
+        background: "rgba(0,0,0,0.18)",
+        backdropFilter: "blur(4px)",
+      }}
+      onClick={onClose}
+    >
       <div
-        className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-stone-200 p-5"
+        style={{
+          width: "100%",
+          maxWidth: 480,
+          background: "#ffffff",
+          border: "1px solid #E8E6E1",
+          borderRadius: 16,
+          padding: 20,
+          boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+          marginBottom: 16,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="text-sm text-stone-500 mb-3 line-clamp-2 italic">&ldquo;{highlight.text}&rdquo;</p>
+        <p style={{ fontSize: 13, color: "#6B6B6B", fontStyle: "italic", marginBottom: 12, lineHeight: 1.6 }}>
+          &ldquo;{highlight.text}&rdquo;
+        </p>
         <textarea
           autoFocus
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Add a note…"
           rows={3}
-          className="w-full rounded-xl border border-stone-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-500"
+          className="input"
+          style={{ resize: "none", fontSize: 13, marginBottom: 12 }}
         />
-        <div className="flex gap-2 mt-3">
+        <div style={{ display: "flex", gap: 8 }}>
           <button
             onClick={() => onSave(note.trim() || null)}
-            className="flex-1 rounded-xl bg-violet-600 text-white py-2 text-sm font-medium hover:bg-violet-700 transition-colors"
+            className="btn-primary"
+            style={{ flex: 1, fontSize: 13, padding: "8px 16px" }}
           >
-            Save
+            Save note
           </button>
           <button
             onClick={onDelete}
-            className="rounded-xl border border-red-200 text-red-600 px-4 py-2 text-sm hover:bg-red-50 transition-colors"
+            style={{
+              padding: "8px 14px",
+              borderRadius: 8,
+              border: "1px solid #FCA5A5",
+              background: "transparent",
+              color: "#DC2626",
+              fontSize: 13,
+              cursor: "pointer",
+              transition: "background 0.15s ease",
+            }}
+            onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#FEF2F2"; }}
+            onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "transparent"; }}
           >
             Delete
           </button>
           <button
             onClick={onClose}
-            className="rounded-xl border border-stone-200 text-stone-600 px-4 py-2 text-sm hover:bg-stone-50 transition-colors"
+            className="btn-ghost"
+            style={{ fontSize: 13, padding: "8px 14px" }}
           >
             Cancel
           </button>

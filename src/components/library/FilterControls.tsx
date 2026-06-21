@@ -15,52 +15,68 @@ interface Props {
 }
 
 export default function FilterControls({
-  status, onStatusChange, search, onSearchChange,
+  status, onStatusChange,
+  search, onSearchChange,
   allTags, selectedTag, onTagChange,
   collections, selectedCollectionId, onCollectionChange,
 }: Props) {
   return (
-    <div className="space-y-5">
-      {/* Status toggle */}
-      <div>
-        <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">Status</p>
-        <div className="flex rounded-xl border border-stone-200 overflow-hidden bg-white shadow-sm">
-          {(["unread", "archived"] as const).map((s) => (
-            <button
-              key={s}
-              onClick={() => onStatusChange(s)}
-              className={`flex-1 py-2 text-sm font-medium capitalize transition-colors ${
-                status === s
-                  ? "bg-violet-600 text-white"
-                  : "text-stone-600 hover:bg-stone-50"
-              }`}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Status tabs */}
+      <div
+        style={{
+          display: "inline-flex",
+          background: "#F0EFE9",
+          borderRadius: 8,
+          padding: 3,
+          gap: 2,
+          alignSelf: "flex-start",
+        }}
+      >
+        {(["unread", "archived"] as const).map((s) => (
+          <button
+            key={s}
+            onClick={() => onStatusChange(s)}
+            style={{
+              padding: "6px 14px",
+              borderRadius: 6,
+              fontSize: 13,
+              fontWeight: 500,
+              border: "none",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+              background: status === s ? "#ffffff" : "transparent",
+              color: status === s ? "#1A1A1A" : "#6B6B6B",
+              boxShadow: status === s ? "0 1px 3px rgba(0,0,0,0.10)" : "none",
+            }}
+          >
+            {s === "unread" ? "Inbox" : "Archived"}
+          </button>
+        ))}
       </div>
 
       {/* Search */}
       <div>
-        <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">Search</p>
+        <p className="section-label">Search</p>
         <input
           type="search"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search articles…"
-          className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 shadow-sm"
+          className="input"
+          style={{ fontSize: 13 }}
         />
       </div>
 
       {/* Collections */}
       {collections && collections.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">Collection</p>
+          <p className="section-label">Collection</p>
           <select
             value={selectedCollectionId ?? ""}
             onChange={(e) => onCollectionChange?.(e.target.value || null)}
-            className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 shadow-sm"
+            className="input"
+            style={{ fontSize: 13, cursor: "pointer" }}
           >
             <option value="">All collections</option>
             {collections.map((c) => (
@@ -73,34 +89,47 @@ export default function FilterControls({
       {/* Tags */}
       {allTags.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">Tags</p>
-          <div className="flex flex-wrap gap-1.5">
-            <button
+          <p className="section-label">Tags</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            <FilterTag
+              active={!selectedTag}
               onClick={() => onTagChange(null)}
-              className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
-                !selectedTag
-                  ? "bg-violet-600 text-white"
-                  : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-              }`}
-            >
-              All
-            </button>
+              label="All"
+            />
             {allTags.map((t) => (
-              <button
+              <FilterTag
                 key={t}
+                active={selectedTag === t}
                 onClick={() => onTagChange(t === selectedTag ? null : t)}
-                className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
-                  selectedTag === t
-                    ? "bg-violet-600 text-white"
-                    : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-                }`}
-              >
-                {t}
-              </button>
+                label={t}
+              />
             ))}
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+function FilterTag({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        padding: "3px 10px",
+        borderRadius: 99,
+        fontSize: 12,
+        fontWeight: 500,
+        border: "none",
+        cursor: "pointer",
+        transition: "all 0.15s ease",
+        background: active ? "#5B5BD6" : "#F0EFE9",
+        color: active ? "#ffffff" : "#6B6B6B",
+      }}
+    >
+      {label}
+    </button>
   );
 }

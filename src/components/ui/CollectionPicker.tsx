@@ -29,29 +29,34 @@ export default function CollectionPicker({ collections, selectedIds, onChange, o
   }
 
   return (
-    <div className="space-y-1.5">
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       {collections.map((c) => (
-        <label key={c.id} className="flex items-center gap-2.5 text-sm cursor-pointer text-stone-700 hover:text-stone-900 transition-colors">
+        <label
+          key={c.id}
+          style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#1A1A1A", cursor: "pointer" }}
+        >
           <input
             type="checkbox"
             checked={selectedIds.includes(c.id)}
             onChange={() => toggle(c.id)}
-            className="accent-violet-600 rounded"
+            style={{ accentColor: "#5B5BD6", width: 14, height: 14 }}
           />
           {c.name}
         </label>
       ))}
-      <form onSubmit={handleCreate} className="flex gap-2 mt-3">
+      <form onSubmit={handleCreate} style={{ display: "flex", gap: 8, marginTop: 8 }}>
         <input
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           placeholder="New collection…"
-          className="flex-1 rounded-xl border border-stone-200 bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500 shadow-sm"
+          className="input"
+          style={{ fontSize: 12, padding: "6px 10px" }}
         />
         <button
           type="submit"
           disabled={creating || !newName.trim()}
-          className="rounded-xl bg-violet-600 text-white px-3 py-1.5 text-xs font-medium hover:bg-violet-700 disabled:opacity-50 transition-colors"
+          className="btn-primary"
+          style={{ fontSize: 12, padding: "6px 12px", whiteSpace: "nowrap" }}
         >
           Add
         </button>

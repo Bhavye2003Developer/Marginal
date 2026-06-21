@@ -21,8 +21,7 @@ export default function LibraryPage() {
     if (selectedTag) params.set("tag", selectedTag);
     if (selectedCollectionId) params.set("collectionId", selectedCollectionId);
     const res = await fetch(`/api/articles?${params}`);
-    const data = await res.json();
-    setArticles(data);
+    setArticles(await res.json());
     setLoading(false);
   }, [status, search, selectedTag, selectedCollectionId]);
 
@@ -35,11 +34,10 @@ export default function LibraryPage() {
   useEffect(() => { fetchCollections(); }, [fetchCollections]);
 
   async function toggleStatus(id: string, current: "unread" | "archived") {
-    const next = current === "unread" ? "archived" : "unread";
     await fetch(`/api/articles/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: next }),
+      body: JSON.stringify({ status: current === "unread" ? "archived" : "unread" }),
     });
     fetchArticles();
   }
@@ -47,16 +45,25 @@ export default function LibraryPage() {
   const allTags = Array.from(new Set(articles.flatMap((a) => a.tags)));
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Save bar at top */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-stone-900 mb-4">Your Library</h1>
+    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px" }}>
+      {/* Page header */}
+      <div style={{ marginBottom: 32 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: "#1A1A1A", marginBottom: 4 }}>
+          Reading List
+        </h1>
+        <p style={{ fontSize: 14, color: "#A8A49C" }}>
+          {articles.length > 0 ? `${articles.length} article${articles.length !== 1 ? "s" : ""}` : "Save articles to read later"}
+        </p>
+      </div>
+
+      {/* Save bar */}
+      <div style={{ marginBottom: 36 }}>
         <SaveBar onSaved={fetchArticles} />
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Sidebar filters */}
-        <aside className="w-full md:w-56 shrink-0">
+      <div style={{ display: "flex", gap: 40, alignItems: "flex-start" }}>
+        {/* Sidebar */}
+        <aside style={{ width: 200, flexShrink: 0 }}>
           <FilterControls
             status={status}
             onStatusChange={(s) => { setStatus(s); setSelectedTag(null); setSelectedCollectionId(null); }}
@@ -72,20 +79,22 @@ export default function LibraryPage() {
         </aside>
 
         {/* Article list */}
-        <main className="flex-1 min-w-0">
+        <main style={{ flex: 1, minWidth: 0 }}>
           {loading ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="w-6 h-6 border-2 border-violet-600 border-t-transparent rounded-full animate-spin" />
+            <div style={{ display: "flex", justifyContent: "center", padding: "64px 0" }}>
+              <div className="spinner" />
             </div>
           ) : articles.length === 0 ? (
-            <div className="text-center py-16 text-stone-400">
-              <p className="text-4xl mb-3">◈</p>
-              <p className="text-sm">
-                {status === "unread" ? "No articles yet. Paste a URL above to get started." : "Nothing archived yet."}
+            <div style={{ textAlign: "center", padding: "64px 0", color: "#A8A49C" }}>
+              <p style={{ fontSize: 32, marginBottom: 12 }}>◈</p>
+              <p style={{ fontSize: 14 }}>
+                {status === "unread"
+                  ? "No articles yet. Paste a URL above to get started."
+                  : "Nothing archived yet."}
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {articles.map((a) => (
                 <ArticleCard key={a.id} article={a} onToggleStatus={toggleStatus} />
               ))}

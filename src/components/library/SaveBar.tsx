@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState } from "react";
 
 interface Props {
   onSaved: () => void;
@@ -9,13 +9,14 @@ export default function SaveBar({ onSaved }: Props) {
   const [url, setUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [success, setSuccess] = useState(false);
 
-  async function handleUrlSave(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!url.trim()) return;
+    if (!url.trim() || saving) return;
     setSaving(true);
     setError(null);
+    setSuccess(false);
     try {
       const res = await fetch("/api/articles", {
         method: "POST",
@@ -24,6 +25,8 @@ export default function SaveBar({ onSaved }: Props) {
       });
       if (!res.ok) throw new Error((await res.json()).error ?? "Save failed");
       setUrl("");
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2000);
       onSaved();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Save failed");
@@ -32,63 +35,36 @@ export default function SaveBar({ onSaved }: Props) {
     }
   }
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setSaving(true);
-    setError(null);
-    try {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: form });
-      if (!res.ok) throw new Error((await res.json()).error ?? "Upload failed");
-      onSaved();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setSaving(false);
-      if (fileRef.current) fileRef.current.value = "";
-    }
-  }
-
   return (
     <div>
-      <form onSubmit={handleUrlSave} className="flex gap-2">
+      <form onSubmit={handleSubmit} className="flex gap-2">
         <input
           type="url"
           value={url}
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={(e) => { setUrl(e.target.value); setError(null); }}
           placeholder="Paste a URL to save…"
-          className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent shadow-sm"
+          className="input flex-1 text-[14px]"
+          style={{ padding: "10px 16px", borderRadius: 10, fontSize: 14 }}
+          autoComplete="off"
         />
         <button
           type="submit"
           disabled={saving || !url.trim()}
-          className="shrink-0 rounded-xl bg-violet-600 text-white px-5 py-2.5 text-sm font-medium hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+          className="btn-primary"
+          style={{ padding: "10px 20px", borderRadius: 10, fontSize: 14 }}
         >
-          {saving ? "Saving…" : "Save"}
+          {saving ? (
+            <span className="flex items-center gap-2">
+              <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
+              Saving
+            </span>
+          ) : success ? "✓ Saved" : "Save"}
         </button>
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          disabled={saving}
-          className="shrink-0 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 disabled:opacity-50 transition-colors shadow-sm hidden sm:block"
-        >
-          Upload PDF
-        </button>
-        <input ref={fileRef} type="file" accept=".pdf" className="hidden" onChange={handleFileChange} />
       </form>
-      {/* Mobile PDF upload button */}
-      <button
-        type="button"
-        onClick={() => fileRef.current?.click()}
-        disabled={saving}
-        className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 disabled:opacity-50 transition-colors shadow-sm sm:hidden"
-      >
-        Upload PDF
-      </button>
       {error && (
-        <p className="mt-2 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+        <p className="mt-2 text-[13px] text-red-600 flex items-center gap-1.5">
+          <span>⚠</span> {error}
+        </p>
       )}
     </div>
   );

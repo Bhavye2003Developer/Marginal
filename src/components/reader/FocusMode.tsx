@@ -26,12 +26,28 @@ export default function FocusMode({ active, onToggle, children }: Props) {
   return (
     <div
       ref={ref}
-      className={active ? "fixed inset-0 z-40 bg-white overflow-auto" : ""}
+      style={active ? { position: "fixed", inset: 0, zIndex: 40, background: "#F9F8F6", overflowY: "auto" } : undefined}
     >
       {active && (
-        <div className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-stone-100 px-4 py-3 flex items-center justify-between text-sm">
-          <span className="text-stone-400">Focus mode · You can always close the browser tab</span>
-          <button onClick={onToggle} className="text-stone-500 hover:text-violet-600 transition-colors font-medium">
+        <div
+          style={{
+            position: "sticky",
+            top: 0,
+            zIndex: 50,
+            background: "rgba(249,248,246,0.92)",
+            backdropFilter: "blur(8px)",
+            borderBottom: "1px solid #E8E6E1",
+            padding: "10px 24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <span style={{ fontSize: 12, color: "#A8A49C" }}>Focus mode</span>
+          <button
+            onClick={onToggle}
+            style={{ fontSize: 12, color: "#6B6B6B", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}
+          >
             Exit
           </button>
         </div>
