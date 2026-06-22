@@ -1,5 +1,5 @@
 import { Readability } from "@mozilla/readability";
-import { JSDOM } from "jsdom";
+import { parseHTML } from "linkedom";
 
 export interface ExtractedArticle {
   title: string;
@@ -28,14 +28,21 @@ export async function extractArticle(url: string): Promise<ExtractedArticle> {
     );
   }
 
-  // Parse with the effective URL as base so JSDOM resolves relative paths correctly.
-  const dom = new JSDOM(html, { url: effectiveUrl });
-  const article = new Readability(dom.window.document).parse();
+  // Inject <base> so linkedom resolves relative links correctly.
+  const { document } = parseHTML(injectBase(html, effectiveUrl));
+  const article = new Readability(document as unknown as Document).parse();
   if (!article) throw new Error("Could not extract article content from this page");
-  // Resolve img src to absolute using effectiveUrl (may be http:// if we fell back).
+
   const content = resolveImageUrls(article.content ?? "", effectiveUrl);
   const images = extractImages(content, effectiveUrl);
   return { title: article.title ?? "", content, images };
+}
+
+function injectBase(html: string, baseUrl: string): string {
+  // Prepend <base> inside <head> so relative URLs resolve against effectiveUrl.
+  const tag = `<base href="${baseUrl}">`;
+  if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, (m) => m + tag);
+  return tag + html;
 }
 
 interface PageResult {
@@ -85,24 +92,33 @@ function isSslError(err: unknown): boolean {
   return /cert|ssl|tls|altname|principal|verify|handshake|pkix|x509/.test(text);
 }
 
-// Rewrites relative img src/srcset attributes to absolute URLs so images
-// load correctly when content is rendered outside the original site's origin.
+// Rewrites relative img src/data-src to absolute using the effective fetch URL.
 function resolveImageUrls(html: string, baseUrl: string): string {
-  const dom = new JSDOM(html, { url: baseUrl });
-  dom.window.document.querySelectorAll("img").forEach((img) => {
-    if (img.src) img.setAttribute("src", img.src); // img.src is already resolved by JSDOM
-    if (img.dataset.src) img.setAttribute("data-src", new URL(img.dataset.src, baseUrl).href);
+  const { document } = parseHTML(html);
+  document.querySelectorAll("img").forEach((img: Element) => {
+    const src = img.getAttribute("src");
+    if (src) {
+      try { img.setAttribute("src", new URL(src, baseUrl).href); } catch {}
+    }
+    const dataSrc = img.getAttribute("data-src");
+    if (dataSrc) {
+      try { img.setAttribute("data-src", new URL(dataSrc, baseUrl).href); } catch {}
+    }
   });
-  return dom.window.document.body.innerHTML;
+  return (document as unknown as Document).body?.innerHTML ?? html;
 }
 
 function extractImages(
   html: string,
   baseUrl: string
 ): Array<{ originalUrl: string; cachedUrl: null }> {
-  const dom = new JSDOM(html, { url: baseUrl });
-  return Array.from(dom.window.document.querySelectorAll("img"))
-    .map((img) => img.src)
-    .filter(Boolean)
+  const { document } = parseHTML(html);
+  return Array.from(document.querySelectorAll("img"))
+    .map((img: Element) => {
+      const src = img.getAttribute("src");
+      if (!src) return null;
+      try { return new URL(src, baseUrl).href; } catch { return null; }
+    })
+    .filter((src): src is string => Boolean(src))
     .map((src) => ({ originalUrl: src, cachedUrl: null }));
 }
