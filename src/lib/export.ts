@@ -15,7 +15,7 @@ export function generateMarkdown(highlights: Highlight[], articles: Article[]): 
   // Group highlights by article
   const grouped = new Map<string, Highlight[]>();
   for (const h of highlights) {
-    const key = h.articleId;
+    const key = h.articleId ?? "deleted";
     if (!grouped.has(key)) grouped.set(key, []);
     grouped.get(key)!.push(h);
   }

@@ -75,7 +75,7 @@ async function doFetch(url: string): Promise<PageResult> {
   });
   const contentType = res.headers.get("content-type") ?? "";
   const html = await res.text();
-  return { status: res.status, contentType, html };
+  return { status: res.status, contentType, html, effectiveUrl: url };
 }
 
 function isSslError(err: unknown): boolean {
