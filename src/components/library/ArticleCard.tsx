@@ -5,9 +5,10 @@ import type { Article } from "@/lib/types";
 interface Props {
   article: Article;
   onToggleStatus: (id: string, current: "unread" | "archived") => void;
+  onDelete: (id: string) => void;
 }
 
-export default function ArticleCard({ article, onToggleStatus }: Props) {
+export default function ArticleCard({ article, onToggleStatus, onDelete }: Props) {
   const domain = (() => {
     try { return new URL(article.sourceUrl).hostname.replace(/^www\./, ""); }
     catch { return article.sourceUrl; }
@@ -35,7 +36,7 @@ export default function ArticleCard({ article, onToggleStatus }: Props) {
               textDecoration: "none",
               marginBottom: 4,
             } as React.CSSProperties}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--accent)"; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--primary)"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text)"; }}
           >
             {article.title}
@@ -57,10 +58,18 @@ export default function ArticleCard({ article, onToggleStatus }: Props) {
           <button
             onClick={() => onToggleStatus(article.id, article.status)}
             style={{ fontSize: 12, color: "var(--text-subtle)", background: "none", border: "none", cursor: "pointer", fontWeight: 500, padding: 0, fontFamily: "inherit" }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--accent)"; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--primary)"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-subtle)"; }}
           >
             {article.status === "unread" ? "Archive" : "Restore"}
+          </button>
+          <button
+            onClick={() => { if (window.confirm("Delete this article?")) onDelete(article.id); }}
+            style={{ fontSize: 12, color: "var(--text-subtle)", background: "none", border: "none", cursor: "pointer", fontWeight: 500, padding: 0, fontFamily: "inherit" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#E5534B"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-subtle)"; }}
+          >
+            Delete
           </button>
         </div>
       </div>

@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Geist } from "next/font/google";
 import Link from "next/link";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -10,7 +13,7 @@ export const metadata: Metadata = { title: "Marginal" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" className={cn("font-sans", geist.variable)} suppressHydrationWarning>
       <head>
         {/* Static hardcoded script — no user input, safe from XSS */}
         {/* Runs before React hydration to prevent flash of wrong theme */}
@@ -26,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             position: "sticky",
             top: 0,
             zIndex: 50,
-            background: "rgba(var(--bg-card-rgb, 255,255,255), 0.85)",
+            background: "color-mix(in srgb, var(--bg-card) 85%, transparent)",
             backdropFilter: "blur(12px)",
             borderBottom: "1px solid var(--border)",
             transition: "background 0.2s ease",
@@ -48,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               href="/library"
               style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: "var(--text)", fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}
             >
-              <span style={{ color: "var(--accent)", fontSize: 16, lineHeight: 1 }}>◈</span>
+              <span style={{ color: "var(--primary)", fontSize: 16, lineHeight: 1 }}>◈</span>
               Marginal
             </Link>
             <div style={{ display: "flex", alignItems: "center", gap: 2 }}>

@@ -17,7 +17,7 @@ export interface Article {
 
 export interface Highlight {
   id: string;
-  articleId: string;
+  articleId: string | null;
   color: "yellow" | "green" | "blue" | "pink";
   text: string;
   note: string | null;

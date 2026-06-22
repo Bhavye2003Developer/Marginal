@@ -59,6 +59,13 @@ export default function LibraryPage() {
     } catch {}
   }
 
+  async function deleteArticle(id: string) {
+    try {
+      await fetch(`/api/articles/${id}`, { method: "DELETE" });
+      setArticles((prev) => prev.filter((a) => a.id !== id));
+    } catch {}
+  }
+
   const allTags = Array.from(new Set(articles.flatMap((a) => a.tags)));
 
   return (
@@ -113,7 +120,7 @@ export default function LibraryPage() {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {articles.map((a) => (
-                <ArticleCard key={a.id} article={a} onToggleStatus={toggleStatus} />
+                <ArticleCard key={a.id} article={a} onToggleStatus={toggleStatus} onDelete={deleteArticle} />
               ))}
             </div>
           )}

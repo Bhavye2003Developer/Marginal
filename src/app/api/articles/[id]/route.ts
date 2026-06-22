@@ -34,7 +34,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { id } = await params;
   const sb = getSupabase();
-  // highlights cascade-delete via FK ON DELETE CASCADE
+  // highlights.article_id becomes null via FK ON DELETE SET NULL
   await sb.from("articles").delete().eq("id", id);
   return new NextResponse(null, { status: 204 });
 }

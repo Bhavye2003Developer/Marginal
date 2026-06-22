@@ -39,8 +39,8 @@ export default function TagInput({ tags, onChange }: Props) {
         transition: "border-color 0.15s ease, box-shadow 0.15s ease",
       }}
       onFocusCapture={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)";
-        (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent)";
+        (e.currentTarget as HTMLElement).style.borderColor = "var(--primary)";
+        (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent)";
       }}
       onBlurCapture={(e) => {
         (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";

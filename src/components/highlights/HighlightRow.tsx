@@ -18,9 +18,10 @@ const COLOR_BG_LIGHT: Record<string, string> = {
 
 interface Props {
   highlight: Highlight & { articleTitle: string };
+  onDelete: (id: string) => void;
 }
 
-export default function HighlightRow({ highlight }: Props) {
+export default function HighlightRow({ highlight, onDelete }: Props) {
   const accent = COLOR_ACCENT[highlight.color] ?? "var(--border)";
   const quoteBg = COLOR_BG_LIGHT[highlight.color] ?? "var(--bg-surface)";
 
@@ -55,17 +56,31 @@ export default function HighlightRow({ highlight }: Props) {
       )}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ width: 8, height: 8, borderRadius: "50%", background: accent, flexShrink: 0, display: "inline-block" }} />
-        <Link
-          href={`/reader/${highlight.articleId}`}
-          style={{ fontSize: 12, fontWeight: 500, color: "var(--accent)", textDecoration: "none", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.textDecoration = "underline"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.textDecoration = "none"; }}
-        >
-          {highlight.articleTitle}
-        </Link>
+        {highlight.articleId ? (
+          <Link
+            href={`/reader/${highlight.articleId}`}
+            style={{ fontSize: 12, fontWeight: 500, color: "var(--primary)", textDecoration: "none", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.textDecoration = "underline"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.textDecoration = "none"; }}
+          >
+            {highlight.articleTitle}
+          </Link>
+        ) : (
+          <span style={{ fontSize: 12, color: "var(--text-subtle)", fontStyle: "italic", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            Deleted article
+          </span>
+        )}
         <span style={{ fontSize: 12, color: "var(--text-subtle)", flexShrink: 0 }}>
           {new Date(highlight.createdAt).toLocaleDateString("en", { month: "short", day: "numeric" })}
         </span>
+        <button
+          onClick={() => { if (window.confirm("Delete this highlight?")) onDelete(highlight.id); }}
+          style={{ fontSize: 12, color: "var(--text-subtle)", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit", flexShrink: 0 }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#E5534B"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-subtle)"; }}
+        >
+          Delete
+        </button>
       </div>
     </div>
   );

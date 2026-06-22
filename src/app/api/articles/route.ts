@@ -37,7 +37,8 @@ export async function POST(req: NextRequest) {
   try {
     extracted = await extractArticle(body.url);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Extraction failed";
+    const message =
+      err instanceof Error && err.message ? err.message : "Could not extract article";
     return NextResponse.json({ error: message }, { status: 422 });
   }
 

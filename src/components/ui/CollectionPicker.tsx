@@ -38,7 +38,7 @@ export default function CollectionPicker({ collections, selectedIds, onChange, o
             type="checkbox"
             checked={selectedIds.includes(c.id)}
             onChange={() => toggle(c.id)}
-            style={{ accentColor: "var(--accent)", width: 14, height: 14 }}
+            style={{ accentColor: "var(--primary)", width: 14, height: 14 }}
           />
           {c.name}
         </label>

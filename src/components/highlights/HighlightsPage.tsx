@@ -44,7 +44,7 @@ export default function HighlightsPage() {
       const articleMap = new Map(articles.map((a) => [a.id, a.title]));
       const enriched = (Array.isArray(raw) ? raw : []).map((h: Highlight) => ({
         ...h,
-        articleTitle: articleMap.get(h.articleId) ?? "Unknown",
+        articleTitle: h.articleId ? (articleMap.get(h.articleId) ?? "Unknown article") : "Deleted article",
       }));
       setHighlights(enriched);
     } catch {
@@ -116,7 +116,14 @@ export default function HighlightsPage() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {highlights.map((h) => (
-            <HighlightRow key={h.id} highlight={h} />
+            <HighlightRow
+              key={h.id}
+              highlight={h}
+              onDelete={async (id) => {
+                await fetch(`/api/highlights/${id}`, { method: "DELETE" });
+                setHighlights((prev) => prev.filter((x) => x.id !== id));
+              }}
+            />
           ))}
         </div>
       )}

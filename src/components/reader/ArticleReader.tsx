@@ -129,7 +129,7 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
           <Link
             href="/library"
             style={{ fontSize: 13, color: "var(--text-muted)", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--accent)"; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--primary)"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; }}
           >
             ← Library
@@ -154,7 +154,7 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
               target="_blank"
               rel="noopener noreferrer"
               style={{ fontSize: 13, color: "var(--text-subtle)", textDecoration: "none" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--accent)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--primary)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-subtle)"; }}
             >
               {domain}
