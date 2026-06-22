@@ -8,6 +8,9 @@ const COLORS = [
   { id: "pink"   as const, bg: "#F472B6", label: "Pink" },
 ];
 
+const POPUP_W = 184; // approximate width: 4 * 28px buttons + gaps + padding
+const POPUP_H = 48;
+
 interface Props {
   rect: DOMRect;
   onSelect: (color: "yellow" | "green" | "blue" | "pink") => void;
@@ -19,19 +22,24 @@ export default function ColorPicker({ rect, onSelect, onDismiss }: Props) {
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) { if (e.key === "Escape") onDismiss(); }
-    function onMouseDown(e: MouseEvent) {
+    function onPointerDown(e: PointerEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) onDismiss();
     }
     document.addEventListener("keydown", onKeyDown);
-    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("pointerdown", onPointerDown);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("pointerdown", onPointerDown);
     };
   }, [onDismiss]);
 
-  const top = rect.top + window.scrollY - 56;
-  const left = rect.left + rect.width / 2 - 92;
+  // Position above the selection, clamped to viewport
+  const vw = typeof window !== "undefined" ? window.innerWidth : 1200;
+  const rawTop  = rect.top + window.scrollY - POPUP_H - 8;
+  const rawLeft = rect.left + rect.width / 2 - POPUP_W / 2;
+
+  const top  = Math.max(window.scrollY + 8, rawTop);
+  const left = Math.max(8, Math.min(rawLeft, vw - POPUP_W - 8));
 
   return (
     <div

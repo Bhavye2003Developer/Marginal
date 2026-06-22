@@ -6,9 +6,19 @@ interface Props {
   article: Article;
   onToggleStatus: (id: string, current: "unread" | "archived") => void;
   onDelete: (id: string) => void;
+  isCached?: boolean;
+  isCaching?: boolean;
+  onCacheToggle?: (id: string) => void;
 }
 
-export default function ArticleCard({ article, onToggleStatus, onDelete }: Props) {
+export default function ArticleCard({
+  article,
+  onToggleStatus,
+  onDelete,
+  isCached = false,
+  isCaching = false,
+  onCacheToggle,
+}: Props) {
   const domain = (() => {
     try { return new URL(article.sourceUrl).hostname.replace(/^www\./, ""); }
     catch { return article.sourceUrl; }
@@ -53,7 +63,7 @@ export default function ArticleCard({ article, onToggleStatus, onDelete }: Props
           )}
         </div>
 
-        <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, paddingTop: 2 }}>
+        <div className="card-actions">
           <span style={{ fontSize: 12, color: "var(--text-subtle)" }}>{dateStr}</span>
           <button
             onClick={() => onToggleStatus(article.id, article.status)}
@@ -71,6 +81,25 @@ export default function ArticleCard({ article, onToggleStatus, onDelete }: Props
           >
             Delete
           </button>
+          {onCacheToggle && (
+            <button
+              onClick={() => !isCaching && onCacheToggle(article.id)}
+              disabled={isCaching}
+              title={isCached ? "Cached offline — click to remove" : "Save for offline reading"}
+              className={`offline-badge${isCached ? " cached" : ""}`}
+            >
+              {isCaching ? (
+                <>
+                  <span className="spinner" style={{ width: 8, height: 8, borderWidth: 1.5 }} />
+                  Saving…
+                </>
+              ) : isCached ? (
+                <>✓ Offline</>
+              ) : (
+                <>↓ Save offline</>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -375,6 +375,73 @@ mark {
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
 
+/* ── Responsive layout helpers ─────────────────────────── */
+
+html, body { overflow-x: hidden; }
+
+.page-wrap        { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+.page-wrap-narrow { max-width: 800px;  margin: 0 auto; padding: 40px 24px; }
+.reader-wrap      { max-width: 720px;  margin: 0 auto; padding: 40px 24px; }
+
+.lib-layout  { display: flex; gap: 40px; align-items: flex-start; }
+.lib-sidebar { width: 200px; flex-shrink: 0; }
+.lib-main    { flex: 1; min-width: 0; }
+
+.card-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; padding-top: 2px; flex-shrink: 0; }
+
+.offline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-subtle);
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: var(--font-sans);
+}
+.offline-badge:hover { border-color: var(--border-hover); color: var(--text-muted); }
+.offline-badge.cached {
+  background: color-mix(in srgb, #34D399 12%, var(--bg-surface));
+  border-color: color-mix(in srgb, #34D399 30%, var(--border));
+  color: #059669;
+}
+.dark .offline-badge.cached { color: #34D399; }
+
+.lib-filter-toggle { display: none !important; }
+.lib-filter-body   { display: block; }
+
+@media (max-width: 768px) {
+  .page-wrap, .page-wrap-narrow { padding: 24px 16px; }
+  .reader-wrap  { padding: 24px 16px; }
+  .lib-layout   { flex-direction: column; gap: 20px; }
+  .lib-sidebar  { width: 100%; }
+  .reader-h1    { font-size: 22px !important; }
+  .header-inner { padding: 0 16px !important; }
+  .card-actions { flex-direction: row; align-items: center; gap: 12px; padding-top: 6px; flex-wrap: wrap; justify-content: flex-end; }
+
+  /* collapsible filters */
+  .lib-filter-toggle { display: flex !important; }
+  .lib-filter-body   { display: none; }
+  .lib-filter-body.open { display: block; }
+}
+
+@media (max-width: 480px) {
+  .page-wrap, .page-wrap-narrow { padding: 16px 12px; }
+  .reader-wrap { padding: 16px 12px; }
+}
+
+@media (pointer: coarse) {
+  .nav-link           { padding: 8px 10px; }
+  .filter-tag         { padding: 6px 14px; font-size: 13px; }
+  .status-toggle-btn  { padding: 8px 18px; }
+}
+
 /* ── Color picker tooltip ──────────────────────────────── */
 .color-picker-popup {
   background: var(--bg-card);

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Geist } from "next/font/google";
 import Link from "next/link";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import OfflineManager from "@/components/ui/OfflineManager";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -9,13 +10,17 @@ const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
-export const metadata: Metadata = { title: "Marginal" };
+export const metadata: Metadata = {
+  title: "Marginal",
+  manifest: "/manifest.json",
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={cn("font-sans", geist.variable)} suppressHydrationWarning>
       <head>
-        {/* Static hardcoded script — no user input, safe from XSS */}
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#5B5BD6" />
         {/* Runs before React hydration to prevent flash of wrong theme */}
         <script
           dangerouslySetInnerHTML={{
@@ -36,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         >
           <nav
+            className="header-inner"
             style={{
               maxWidth: 1100,
               margin: "0 auto",
@@ -63,6 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </nav>
         </header>
         {children}
+        <OfflineManager />
       </body>
     </html>
   );

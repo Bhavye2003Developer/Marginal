@@ -57,7 +57,7 @@ export default function HighlightsPage() {
   useEffect(() => { fetchHighlights(); }, [fetchHighlights]);
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 24px" }}>
+    <div className="page-wrap-narrow">
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 32 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--text)", marginBottom: 4 }}>Highlights</h1>

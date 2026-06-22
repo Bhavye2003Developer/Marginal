@@ -4,6 +4,7 @@ import type { Article, Collection } from "@/lib/types";
 import ArticleCard from "./ArticleCard";
 import SaveBar from "./SaveBar";
 import FilterControls from "./FilterControls";
+import { useOfflineCache } from "@/hooks/useOfflineCache";
 
 export default function LibraryPage() {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -14,6 +15,9 @@ export default function LibraryPage() {
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const { cachedIds, cachingId, cacheArticle, uncacheArticle } = useOfflineCache();
 
   const fetchArticles = useCallback(async () => {
     setLoading(true);
@@ -69,13 +73,15 @@ export default function LibraryPage() {
   const allTags = Array.from(new Set(articles.flatMap((a) => a.tags)));
 
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px" }}>
+    <div className="page-wrap">
       <div style={{ marginBottom: 32 }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--text)", marginBottom: 4 }}>
           Reading List
         </h1>
         <p style={{ fontSize: 14, color: "var(--text-subtle)" }}>
-          {articles.length > 0 ? `${articles.length} article${articles.length !== 1 ? "s" : ""}` : "Save articles to read later"}
+          {articles.length > 0
+            ? `${articles.length} article${articles.length !== 1 ? "s" : ""}`
+            : "Save articles to read later"}
         </p>
       </div>
 
@@ -89,23 +95,55 @@ export default function LibraryPage() {
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 40, alignItems: "flex-start" }}>
-        <aside style={{ width: 200, flexShrink: 0 }}>
-          <FilterControls
-            status={status}
-            onStatusChange={(s) => { setStatus(s); setSelectedTag(null); setSelectedCollectionId(null); }}
-            search={search}
-            onSearchChange={setSearch}
-            allTags={allTags}
-            selectedTag={selectedTag}
-            onTagChange={setSelectedTag}
-            collections={collections}
-            selectedCollectionId={selectedCollectionId}
-            onCollectionChange={setSelectedCollectionId}
-          />
+      <div className="lib-layout">
+        {/* Sidebar — always visible on desktop, collapsible on mobile */}
+        <aside className="lib-sidebar">
+          {/* Mobile-only toggle */}
+          <button
+            onClick={() => setFiltersOpen((v) => !v)}
+            aria-expanded={filtersOpen}
+            style={{
+              display: "none", // shown via CSS on ≤768px
+              width: "100%",
+              padding: "10px 0",
+              marginBottom: 12,
+              background: "none",
+              border: "none",
+              borderBottom: "1px solid var(--border)",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              fontSize: 12,
+              fontWeight: 600,
+              color: "var(--text-muted)",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              textAlign: "left",
+            }}
+            className="lib-filter-toggle"
+          >
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              Filters
+              <span style={{ fontSize: 10 }}>{filtersOpen ? "▲" : "▼"}</span>
+            </span>
+          </button>
+
+          <div className={`lib-filter-body${filtersOpen ? " open" : ""}`}>
+            <FilterControls
+              status={status}
+              onStatusChange={(s) => { setStatus(s); setSelectedTag(null); setSelectedCollectionId(null); }}
+              search={search}
+              onSearchChange={setSearch}
+              allTags={allTags}
+              selectedTag={selectedTag}
+              onTagChange={setSelectedTag}
+              collections={collections}
+              selectedCollectionId={selectedCollectionId}
+              onCollectionChange={setSelectedCollectionId}
+            />
+          </div>
         </aside>
 
-        <main style={{ flex: 1, minWidth: 0 }}>
+        <main className="lib-main">
           {loading ? (
             <div style={{ display: "flex", justifyContent: "center", padding: "64px 0" }}>
               <div className="spinner" />
@@ -114,13 +152,25 @@ export default function LibraryPage() {
             <div style={{ textAlign: "center", padding: "64px 0", color: "var(--text-subtle)" }}>
               <p style={{ fontSize: 32, marginBottom: 12 }}>◈</p>
               <p style={{ fontSize: 14 }}>
-                {status === "unread" ? "No articles yet. Paste a URL above to get started." : "Nothing archived yet."}
+                {status === "unread"
+                  ? "No articles yet. Paste a URL above to get started."
+                  : "Nothing archived yet."}
               </p>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {articles.map((a) => (
-                <ArticleCard key={a.id} article={a} onToggleStatus={toggleStatus} onDelete={deleteArticle} />
+                <ArticleCard
+                  key={a.id}
+                  article={a}
+                  onToggleStatus={toggleStatus}
+                  onDelete={deleteArticle}
+                  isCached={cachedIds.has(a.id)}
+                  isCaching={cachingId === a.id}
+                  onCacheToggle={(id) =>
+                    cachedIds.has(id) ? uncacheArticle(id) : cacheArticle(id)
+                  }
+                />
               ))}
             </div>
           )}

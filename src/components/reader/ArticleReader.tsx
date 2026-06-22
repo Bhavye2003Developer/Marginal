@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import type { Article, Highlight } from "@/lib/types";
 import HighlightLayer from "./HighlightLayer";
@@ -39,6 +39,41 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
   const [activeHighlight, setActiveHighlight] = useState<Highlight | null>(null);
   const [tags, setTags] = useState<string[]>(article.tags);
   const [focusMode, setFocusMode] = useState(false);
+  const [offlineSaved, setOfflineSaved] = useState(false);
+  const [offlineSaving, setOfflineSaving] = useState(false);
+
+  // Check if this article is already cached, and listen for cache confirmation
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+
+    const checkCached = async () => {
+      const cache = await caches.open("marginal-reader-v1").catch(() => null);
+      if (!cache) return;
+      const match = await cache.match(`/reader/${article.id}`);
+      setOfflineSaved(!!match);
+    };
+    checkCached();
+
+    const handler = (e: MessageEvent) => {
+      if (e.data?.type === "CACHE_DONE" && e.data.id === article.id) {
+        setOfflineSaving(false);
+        setOfflineSaved(e.data.ok);
+      }
+    };
+    navigator.serviceWorker.addEventListener("message", handler);
+    return () => navigator.serviceWorker.removeEventListener("message", handler);
+  }, [article.id]);
+
+  function toggleOffline() {
+    if (!("serviceWorker" in navigator) || !navigator.serviceWorker.controller) return;
+    if (offlineSaved) {
+      navigator.serviceWorker.controller.postMessage({ type: "UNCACHE_ARTICLE", id: article.id });
+      setOfflineSaved(false);
+    } else {
+      setOfflineSaving(true);
+      navigator.serviceWorker.controller.postMessage({ type: "CACHE_ARTICLE", id: article.id });
+    }
+  }
 
   const handleMouseUp = useCallback(() => {
     const sel = window.getSelection();
@@ -124,8 +159,9 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
 
   return (
     <FocusMode active={focusMode} onToggle={() => setFocusMode((v) => !v)}>
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40 }}>
+      <div className="reader-wrap">
+        {/* Top bar: back + controls */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40, flexWrap: "wrap", gap: 8 }}>
           <Link
             href="/library"
             style={{ fontSize: 13, color: "var(--text-muted)", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}
@@ -134,21 +170,37 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
           >
             ← Library
           </Link>
-          <button
-            onClick={() => setFocusMode((v) => !v)}
-            style={{ fontSize: 12, color: "var(--text-subtle)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-subtle)"; }}
-          >
-            {focusMode ? "Exit focus" : "Focus mode"}
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button
+              onClick={toggleOffline}
+              disabled={offlineSaving}
+              title={offlineSaved ? "Cached offline — click to remove" : "Save for offline reading"}
+              className={`offline-badge${offlineSaved ? " cached" : ""}`}
+            >
+              {offlineSaving ? (
+                <><span className="spinner" style={{ width: 8, height: 8, borderWidth: 1.5 }} /> Saving…</>
+              ) : offlineSaved ? (
+                <>✓ Offline</>
+              ) : (
+                <>↓ Save offline</>
+              )}
+            </button>
+            <button
+              onClick={() => setFocusMode((v) => !v)}
+              style={{ fontSize: 12, color: "var(--text-subtle)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-subtle)"; }}
+            >
+              {focusMode ? "Exit focus" : "Focus mode"}
+            </button>
+          </div>
         </div>
 
         <header style={{ marginBottom: 40, paddingBottom: 32, borderBottom: "1px solid var(--border)" }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: "var(--text)", lineHeight: 1.3, marginBottom: 12 }}>
+          <h1 className="reader-h1" style={{ fontSize: 28, fontWeight: 700, color: "var(--text)", lineHeight: 1.3, marginBottom: 12 }}>
             {article.title}
           </h1>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
             <a
               href={article.sourceUrl}
               target="_blank"
