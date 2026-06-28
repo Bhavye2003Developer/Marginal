@@ -66,16 +66,18 @@ function HighlightLayer({ content, highlights, onHighlightClick }: Props) {
       img.onerror  = () => { img.style.display = "none"; };
     });
 
-    if (/\$\$?|\\\(|\\\[/.test(content)) {
+    // Only trigger on confirmed LaTeX delimiters — single $ matches price references
+    // in regular articles ($100) and causes KaTeX to modify DOM text nodes, which
+    // breaks highlight range anchoring. Use $$ and \( \[ which only appear in math.
+    if (/\$\$|\\\(|\\\[/.test(content)) {
       import("katex/contrib/auto-render").then((mod) => {
         // katex 0.17 ESM: exports renderMathInElement as default
-        // webpack CJS interop fallback: mod itself may be the function
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const fn: ((el: Element, opts: object) => void) = (mod as any).default ?? mod;
+        if (typeof fn !== "function") return;
         fn(container, {
           delimiters: [
             { left: "$$",  right: "$$",  display: true  },
-            { left: "$",   right: "$",   display: false },
             { left: "\\(", right: "\\)", display: false },
             { left: "\\[", right: "\\]", display: true  },
           ],
