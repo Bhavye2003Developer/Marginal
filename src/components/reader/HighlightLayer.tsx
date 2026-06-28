@@ -66,9 +66,13 @@ function HighlightLayer({ content, highlights, onHighlightClick }: Props) {
       img.onerror  = () => { img.style.display = "none"; };
     });
 
-    if (/\$|\\\(|\\\[/.test(content)) {
-      import("katex/contrib/auto-render").then(({ default: renderMathInElement }) => {
-        renderMathInElement(container, {
+    if (/\$\$?|\\\(|\\\[/.test(content)) {
+      import("katex/contrib/auto-render").then((mod) => {
+        // katex 0.17 ESM: exports renderMathInElement as default
+        // webpack CJS interop fallback: mod itself may be the function
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const fn: ((el: Element, opts: object) => void) = (mod as any).default ?? mod;
+        fn(container, {
           delimiters: [
             { left: "$$",  right: "$$",  display: true  },
             { left: "$",   right: "$",   display: false },
