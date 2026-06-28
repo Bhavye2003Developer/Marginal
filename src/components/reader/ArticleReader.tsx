@@ -145,12 +145,22 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
     }
   }
 
-  // Called by the floating ball — reads from selectionRef so selection survives the tap
-  async function handleFloatHighlight(color: "yellow" | "green" | "blue" | "pink") {
+  // Stable ref so useCallback below doesn't re-create on every saveHighlight change
+  const saveHighlightRef = useRef(saveHighlight);
+  useEffect(() => { saveHighlightRef.current = saveHighlight; });
+
+  // Stable callbacks — FloatingHighlighter is memo'd and won't re-render unless
+  // these references change.  selectionRef / saveHighlightRef are always current.
+  const handleFloatHighlight = useCallback(async (color: "yellow" | "green" | "blue" | "pink") => {
     const sel = selectionRef.current;
     if (!sel) return;
-    await saveHighlight(color, sel);
-  }
+    await saveHighlightRef.current(color, sel);
+  }, []);
+
+  const handlePress = useCallback(() => {
+    const s = captureSelection();
+    if (s) selectionRef.current = s;
+  }, []);
 
   async function saveNote(id: string, note: string | null) {
     try {
@@ -289,12 +299,7 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
       {/* Floating highlight ball — always visible, works on mobile */}
       <FloatingHighlighter
         onHighlight={handleFloatHighlight}
-        onPress={() => {
-          // Snapshot selection the instant the ball is touched, before the browser
-          // might clear it due to focus/tap on the ball element
-          const s = captureSelection();
-          if (s) selectionRef.current = s;
-        }}
+        onPress={handlePress}
       />
     </FocusMode>
   );

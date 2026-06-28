@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, memo } from "react";
 
 const COLORS = [
   { id: "yellow" as const, bg: "#FFD60A" },
@@ -8,42 +8,44 @@ const COLORS = [
   { id: "pink"   as const, bg: "#FF2D55" },
 ];
 
-const BALL    = 32;   // ball diameter (px)
-const SWATCH  = 26;   // color-swatch diameter
-const ARC_R   = 62;   // ball-center → swatch-center distance
-const PAD     = 14;   // edge padding when snapped
-const DEAD    = 10;   // px dead-zone before drag is registered
-const TAP_MS  = 500;
+const BALL   = 32;  // ball diameter
+const SWATCH = 26;  // colour-swatch diameter
+const ARC_R  = 64;  // ball-centre → swatch-centre distance
+const PAD    = 14;  // screen-edge padding when snapped
+const DEAD   = 10;  // px dead-zone before drag is registered
+const TAP_MS = 500;
 
-// Swatch [tx, ty] offsets from ball-center in SCREEN coords (+x right, +y down).
-// Right-side ball: colours fan to the LEFT  (angles 135°,157.5°,202.5°,225° math)
-// Left-side  ball: colours fan to the RIGHT (mirror of above)
-const ARC_RIGHT: [number, number][] = [[-44,-44], [-57,-24], [-57,24], [-44,44]];
-const ARC_LEFT:  [number, number][] = [[ 44,-44], [ 57,-24], [ 57,24], [ 44,44]];
+// Swatch [tx, ty] offsets from ball-centre (screen coords: +x right, +y down).
+// Evenly spaced at 30° intervals in a 90° quadrant arc.
+//   Angles (math convention): 135°, 165°, 195°, 225°
+//   tx = ARC_R * cos(θ),  ty = –ARC_R * sin(θ)   (screen y is inverted)
+//
+//   135°: (−45, −45)   165°: (−62, −17)   195°: (−62, +17)   225°: (−45, +45)
+const ARC_RIGHT: [number, number][] = [[-45, -45], [-62, -17], [-62, 17], [-45, 45]];
+const ARC_LEFT:  [number, number][] = [[ 45, -45], [ 62, -17], [ 62, 17], [ 45, 45]];
 
 interface Props {
   onHighlight: (color: "yellow" | "green" | "blue" | "pink") => void;
   onPress?: () => void;
 }
 
-export default function FloatingHighlighter({ onHighlight, onPress }: Props) {
-  const wrapRef  = useRef<HTMLDivElement>(null);
-  const posRef   = useRef({ x: 0, y: 0 });
-  const dragRef  = useRef<{
+function FloatingHighlighter({ onHighlight, onPress }: Props) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const posRef  = useRef({ x: 0, y: 0 });
+  const dragRef = useRef<{
     startX: number; startY: number;
     startPX: number; startPY: number;
     startTime: number; moved: boolean;
     pointerId: number;
   } | null>(null);
 
-  // mounted gates visibility (not existence) — the ball div is always in the DOM
-  // so wrapRef.current is set before the first useEffect runs.
+  // Ball div is always in the DOM so wrapRef is set before the init useEffect.
+  // `mounted` gates only visibility (opacity 0→1) and the colour swatches.
   const [mounted,    setMounted]    = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [pressed,    setPressed]    = useState(false);
 
   useEffect(() => {
-    // wrapRef.current IS set here because we always render the ball div
     posRef.current = { x: window.innerWidth - BALL - PAD, y: 110 };
     commit(false);
     setMounted(true);
@@ -77,9 +79,9 @@ export default function FloatingHighlighter({ onHighlight, onPress }: Props) {
     onPress?.();
     setPressed(true);
 
-    // Key fix: read the CURRENT visual transform rather than posRef.current, which
-    // already holds the snap-target when the user grabs mid-animation. Without this,
-    // startPX is wrong and the ball teleports on the first movement.
+    // Read actual visual transform — posRef may already hold the snap-target
+    // while the spring animation is still running. Without this, startPX is
+    // the destination (not where the ball IS), causing it to teleport.
     const el = wrapRef.current;
     if (el) {
       el.style.transition = "none";
@@ -131,13 +133,13 @@ export default function FloatingHighlighter({ onHighlight, onPress }: Props) {
   const isOnRight = mounted
     ? posRef.current.x + BALL / 2 >= window.innerWidth / 2
     : true;
-  const arcs = isOnRight ? ARC_RIGHT : ARC_LEFT;
+  const arcs  = isOnRight ? ARC_RIGHT : ARC_LEFT;
   const ballCX = posRef.current.x + BALL / 2;
   const ballCY = posRef.current.y + BALL / 2;
 
   return (
     <>
-      {/* Colour swatches — shoot out in a semicircle from the ball centre */}
+      {/* Colour swatches — arc animation via CSS custom props + @keyframes colorShoot */}
       {showPicker && mounted && COLORS.map((c, i) => {
         const [tx, ty] = arcs[i];
         return (
@@ -151,7 +153,6 @@ export default function FloatingHighlighter({ onHighlight, onPress }: Props) {
             }}
             style={{
               position: "fixed",
-              // position at ball centre; CSS translate moves to arc position
               left: ballCX - SWATCH / 2,
               top:  ballCY - SWATCH / 2,
               width:  SWATCH,
@@ -165,7 +166,6 @@ export default function FloatingHighlighter({ onHighlight, onPress }: Props) {
               touchAction: "manipulation",
               WebkitTapHighlightColor: "transparent",
               padding: 0,
-              // CSS custom props consumed by @keyframes colorShoot in globals.css
               ["--cx" as string]: `${tx}px`,
               ["--cy" as string]: `${ty}px`,
               animation: `colorShoot 0.34s cubic-bezier(0.34,1.56,0.64,1) ${i * 48}ms both`,
@@ -174,7 +174,7 @@ export default function FloatingHighlighter({ onHighlight, onPress }: Props) {
         );
       })}
 
-      {/* Ball — always in DOM so wrapRef is set before the init useEffect */}
+      {/* Ball — always rendered (never null) so wrapRef is available in init useEffect */}
       <div
         ref={wrapRef}
         onPointerDown={handlePointerDown}
@@ -183,8 +183,7 @@ export default function FloatingHighlighter({ onHighlight, onPress }: Props) {
         onPointerCancel={handlePointerUp}
         style={{
           position: "fixed",
-          left: 0,
-          top: 0,
+          left: 0, top: 0,
           zIndex: 9999,
           willChange: "transform",
           touchAction: "none",
@@ -192,34 +191,32 @@ export default function FloatingHighlighter({ onHighlight, onPress }: Props) {
           WebkitUserSelect: "none",
           WebkitTapHighlightColor: "transparent",
           cursor: pressed ? "grabbing" : "grab",
-          // hidden until positioned by the init useEffect
           opacity: mounted ? 1 : 0,
-          transition: mounted ? undefined : "none",
         }}
       >
-        <div
-          style={{
-            width:  BALL,
-            height: BALL,
-            borderRadius: "50%",
-            background: showPicker
-              ? "rgba(82,82,210,0.92)"
-              : "rgba(120,120,128,0.28)",
-            backdropFilter: "blur(20px) saturate(180%)",
-            WebkitBackdropFilter: "blur(20px) saturate(180%)",
-            border: showPicker
-              ? "1.5px solid rgba(255,255,255,0.40)"
-              : "1.5px solid rgba(255,255,255,0.22)",
-            boxShadow: pressed
-              ? "0 1px 6px rgba(0,0,0,0.16)"
-              : showPicker
-                ? "0 6px 22px rgba(82,82,210,0.50), inset 0 1px 0 rgba(255,255,255,0.22)"
-                : "0 4px 16px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.20)",
-            transform: pressed ? "scale(0.86)" : showPicker ? "scale(1.10)" : "scale(1)",
-            transition: "background 0.20s ease, box-shadow 0.20s ease, border-color 0.20s ease, transform 0.18s cubic-bezier(0.34,1.56,0.64,1)",
-          }}
-        />
+        <div style={{
+          width:  BALL,
+          height: BALL,
+          borderRadius: "50%",
+          background: showPicker
+            ? "rgba(82,82,210,0.92)"
+            : "rgba(120,120,128,0.28)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          border: showPicker
+            ? "1.5px solid rgba(255,255,255,0.40)"
+            : "1.5px solid rgba(255,255,255,0.22)",
+          boxShadow: pressed
+            ? "0 1px 6px rgba(0,0,0,0.16)"
+            : showPicker
+              ? "0 6px 22px rgba(82,82,210,0.50), inset 0 1px 0 rgba(255,255,255,0.22)"
+              : "0 4px 16px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.20)",
+          transform: pressed ? "scale(0.86)" : showPicker ? "scale(1.10)" : "scale(1)",
+          transition: "background 0.20s ease, box-shadow 0.20s ease, border-color 0.20s ease, transform 0.18s cubic-bezier(0.34,1.56,0.64,1)",
+        }} />
       </div>
     </>
   );
 }
+
+export default memo(FloatingHighlighter);
