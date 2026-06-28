@@ -8,19 +8,17 @@ const COLORS = [
   { id: "pink"   as const, bg: "#FF2D55" },
 ];
 
-const BALL   = 32;  // ball diameter
-const SWATCH = 26;  // colour-swatch diameter
-const ARC_R  = 64;  // ball-centre → swatch-centre distance
-const PAD    = 14;  // screen-edge padding when snapped
-const DEAD   = 10;  // px dead-zone before drag is registered
+const BALL   = 32;   // ball diameter
+const SWATCH = 26;   // colour-swatch diameter
+const ARC_R  = 64;   // ball-centre → swatch-centre distance
+const PAD    = 14;   // screen-edge padding when snapped
+const DEAD   = 10;   // px dead-zone before drag is registered
 const TAP_MS = 500;
 
-// Swatch [tx, ty] offsets from ball-centre (screen coords: +x right, +y down).
-// Evenly spaced at 30° intervals in a 90° quadrant arc.
-//   Angles (math convention): 135°, 165°, 195°, 225°
-//   tx = ARC_R * cos(θ),  ty = –ARC_R * sin(θ)   (screen y is inverted)
-//
-//   135°: (−45, −45)   165°: (−62, −17)   195°: (−62, +17)   225°: (−45, +45)
+// Swatch [tx, ty] offsets from ball-centre (screen: +x right, +y down).
+// Evenly spaced at 30° in a 90° quadrant arc.
+//   tx = ARC_R·cos(θ),  ty = −ARC_R·sin(θ)
+//   Angles: 135°, 165°, 195°, 225°
 const ARC_RIGHT: [number, number][] = [[-45, -45], [-62, -17], [-62, 17], [-45, 45]];
 const ARC_LEFT:  [number, number][] = [[ 45, -45], [ 62, -17], [ 62, 17], [ 45, 45]];
 
@@ -30,21 +28,23 @@ interface Props {
 }
 
 function FloatingHighlighter({ onHighlight, onPress }: Props) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const posRef  = useRef({ x: 0, y: 0 });
-  const dragRef = useRef<{
+  const wrapRef      = useRef<HTMLDivElement>(null);
+  const posRef       = useRef({ x: 0, y: 0 });
+  // Tracks whether a snap animation is currently running — lets us skip the
+  // expensive getComputedStyle call when the ball is already at rest.
+  const animatingRef = useRef(false);
+  const dragRef      = useRef<{
     startX: number; startY: number;
     startPX: number; startPY: number;
     startTime: number; moved: boolean;
     pointerId: number;
   } | null>(null);
 
-  // Ball div is always in the DOM so wrapRef is set before the init useEffect.
-  // `mounted` gates only visibility (opacity 0→1) and the colour swatches.
   const [mounted,    setMounted]    = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [pressed,    setPressed]    = useState(false);
 
+  // Ball div is always in the DOM so wrapRef is set before the init useEffect.
   useEffect(() => {
     posRef.current = { x: window.innerWidth - BALL - PAD, y: 110 };
     commit(false);
@@ -55,10 +55,15 @@ function FloatingHighlighter({ onHighlight, onPress }: Props) {
     const el = wrapRef.current;
     if (!el) return;
     if (!animate) {
+      animatingRef.current = false;
       el.style.transition = "none";
     } else {
+      animatingRef.current = true;
       el.style.transition = "transform 0.44s cubic-bezier(0.34,1.56,0.64,1)";
-      setTimeout(() => { if (wrapRef.current) wrapRef.current.style.transition = "none"; }, 470);
+      setTimeout(() => {
+        animatingRef.current = false;
+        if (wrapRef.current) wrapRef.current.style.transition = "none";
+      }, 470);
     }
     el.style.transform = `translate(${posRef.current.x}px,${posRef.current.y}px)`;
   }
@@ -79,17 +84,22 @@ function FloatingHighlighter({ onHighlight, onPress }: Props) {
     onPress?.();
     setPressed(true);
 
-    // Read actual visual transform — posRef may already hold the snap-target
-    // while the spring animation is still running. Without this, startPX is
-    // the destination (not where the ball IS), causing it to teleport.
     const el = wrapRef.current;
     if (el) {
-      el.style.transition = "none";
-      const xform = getComputedStyle(el).transform;
-      if (xform && xform !== "none") {
-        const m = new DOMMatrix(xform);
-        posRef.current = { x: m.m41, y: m.m42 };
-        el.style.transform = `translate(${m.m41}px,${m.m42}px)`;
+      if (animatingRef.current) {
+        // Ball is mid-snap — read actual visual position so drag starts from
+        // where the ball LOOKS, not where it's heading. getComputedStyle forces
+        // a style flush, so we only call it when animation is confirmed running.
+        el.style.transition = "none";
+        const xform = getComputedStyle(el).transform;
+        if (xform && xform !== "none") {
+          const m = new DOMMatrix(xform);
+          posRef.current = { x: m.m41, y: m.m42 };
+          el.style.transform = `translate(${m.m41}px,${m.m42}px)`;
+        }
+        animatingRef.current = false;
+      } else {
+        el.style.transition = "none";
       }
     }
 
@@ -133,15 +143,15 @@ function FloatingHighlighter({ onHighlight, onPress }: Props) {
   const isOnRight = mounted
     ? posRef.current.x + BALL / 2 >= window.innerWidth / 2
     : true;
-  const arcs  = isOnRight ? ARC_RIGHT : ARC_LEFT;
+  const arcs   = isOnRight ? ARC_RIGHT : ARC_LEFT;
   const ballCX = posRef.current.x + BALL / 2;
   const ballCY = posRef.current.y + BALL / 2;
 
   return (
     <>
-      {/* Transparent overlay — closes picker when user taps outside the ball/swatches.
-          z-index 9998 sits below ball (9999) and swatches (10001) so those elements
-          still receive pointer events first; only "empty" taps reach the overlay. */}
+      {/* Full-screen transparent overlay — closes picker when user taps outside.
+          z-index 9998 is below ball (9999) and swatches (10001), so those elements
+          still receive their pointer events first. */}
       {showPicker && mounted && (
         <div
           onPointerDown={(e) => { e.stopPropagation(); setShowPicker(false); }}
@@ -149,7 +159,10 @@ function FloatingHighlighter({ onHighlight, onPress }: Props) {
         />
       )}
 
-      {/* Colour swatches — arc animation via CSS custom props + @keyframes colorShoot */}
+      {/* Colour swatches — placed at their final arc positions via left/top so the
+          hit-testable area is always correct. Scale-only @keyframes colorPop animates
+          the visual "shoot out" effect without any translate, avoiding the mobile bug
+          where fill-mode:both + CSS custom property translate mismatch hit regions. */}
       {showPicker && mounted && COLORS.map((c, i) => {
         const [tx, ty] = arcs[i];
         return (
@@ -163,8 +176,8 @@ function FloatingHighlighter({ onHighlight, onPress }: Props) {
             }}
             style={{
               position: "fixed",
-              left: ballCX - SWATCH / 2,
-              top:  ballCY - SWATCH / 2,
+              left:   ballCX - SWATCH / 2 + tx,
+              top:    ballCY - SWATCH / 2 + ty,
               width:  SWATCH,
               height: SWATCH,
               borderRadius: "50%",
@@ -175,16 +188,17 @@ function FloatingHighlighter({ onHighlight, onPress }: Props) {
               zIndex: 10001,
               touchAction: "manipulation",
               WebkitTapHighlightColor: "transparent",
+              pointerEvents: "auto",
               padding: 0,
-              ["--cx" as string]: `${tx}px`,
-              ["--cy" as string]: `${ty}px`,
-              animation: `colorShoot 0.34s cubic-bezier(0.34,1.56,0.64,1) ${i * 48}ms both`,
+              animation: `colorPop 0.28s cubic-bezier(0.34,1.56,0.64,1) ${i * 45}ms both`,
             }}
           />
         );
       })}
 
-      {/* Ball — always rendered (never null) so wrapRef is available in init useEffect */}
+      {/* Ball — always rendered so wrapRef is set before the init useEffect.
+          No backdrop-filter: blurring a moving element forces per-frame GPU
+          recomposition on mobile, causing drag jank. Solid semi-opaque instead. */}
       <div
         ref={wrapRef}
         onPointerDown={handlePointerDown}
@@ -209,20 +223,18 @@ function FloatingHighlighter({ onHighlight, onPress }: Props) {
           height: BALL,
           borderRadius: "50%",
           background: showPicker
-            ? "rgba(82,82,210,0.92)"
-            : "rgba(120,120,128,0.28)",
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+            ? "rgba(82,82,210,0.90)"
+            : "rgba(110,110,120,0.70)",
           border: showPicker
-            ? "1.5px solid rgba(255,255,255,0.40)"
-            : "1.5px solid rgba(255,255,255,0.22)",
+            ? "1.5px solid rgba(255,255,255,0.42)"
+            : "1.5px solid rgba(255,255,255,0.26)",
           boxShadow: pressed
-            ? "0 1px 6px rgba(0,0,0,0.16)"
+            ? "0 1px 4px rgba(0,0,0,0.22)"
             : showPicker
-              ? "0 6px 22px rgba(82,82,210,0.50), inset 0 1px 0 rgba(255,255,255,0.22)"
-              : "0 4px 16px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.20)",
+              ? "0 4px 18px rgba(82,82,210,0.52)"
+              : "0 3px 12px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.20)",
           transform: pressed ? "scale(0.86)" : showPicker ? "scale(1.10)" : "scale(1)",
-          transition: "background 0.20s ease, box-shadow 0.20s ease, border-color 0.20s ease, transform 0.18s cubic-bezier(0.34,1.56,0.64,1)",
+          transition: "background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, transform 0.16s cubic-bezier(0.34,1.56,0.64,1)",
         }} />
       </div>
     </>

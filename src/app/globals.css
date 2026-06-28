@@ -442,11 +442,12 @@ html, body { overflow-x: hidden; }
   .status-toggle-btn  { padding: 8px 18px; }
 }
 
-/* ── Floating ball: colour swatches shoot out in a semicircle arc ── */
-/* --cx / --cy are set as inline CSS custom props on each swatch button  */
-@keyframes colorShoot {
-  from { transform: translate(0,0) scale(0); opacity: 0; }
-  to   { transform: translate(var(--cx), var(--cy)) scale(1); opacity: 1; }
+/* ── Floating ball: colour swatches pop in from ball centre ── */
+/* Swatches are placed at their final position via left/top, so only   */
+/* scale needs to animate — no custom-property translate in keyframes.  */
+@keyframes colorPop {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
 }
 
 /* ── PDF text layer (transparent text for copy/select) ── */
