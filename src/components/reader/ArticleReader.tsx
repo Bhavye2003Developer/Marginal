@@ -82,21 +82,17 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
     return () => navigator.serviceWorker.removeEventListener("message", handler);
   }, [article.id]);
 
-  // Track selection continuously — debounced so it doesn't fire on every cursor blink
+  // Capture every non-empty selection immediately — no debounce so the ref is
+  // always current by the time the user reaches the floating ball
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
-    const handleSelectionChange = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        const s = captureSelection();
-        if (s) selectionRef.current = s;
-      }, 80);
+    const handle = () => {
+      const s = captureSelection();
+      if (s) selectionRef.current = s;
+      // Never clear selectionRef here — the ball tap may have briefly cleared
+      // the DOM selection, and we still want the previous value
     };
-    document.addEventListener("selectionchange", handleSelectionChange, { passive: true });
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener("selectionchange", handleSelectionChange);
-    };
+    document.addEventListener("selectionchange", handle, { passive: true });
+    return () => document.removeEventListener("selectionchange", handle);
   }, []);
 
   function toggleOffline() {
@@ -291,7 +287,15 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
       </div>
 
       {/* Floating highlight ball — always visible, works on mobile */}
-      <FloatingHighlighter onHighlight={handleFloatHighlight} />
+      <FloatingHighlighter
+        onHighlight={handleFloatHighlight}
+        onPress={() => {
+          // Snapshot selection the instant the ball is touched, before the browser
+          // might clear it due to focus/tap on the ball element
+          const s = captureSelection();
+          if (s) selectionRef.current = s;
+        }}
+      />
     </FocusMode>
   );
 }
