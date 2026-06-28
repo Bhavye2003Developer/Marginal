@@ -41,6 +41,22 @@ function HighlightLayer({ content, highlights, onHighlightClick }: Props) {
 
     container.innerHTML = content; // eslint-disable-line no-unsanitized/property
 
+    // Ensure every text-bearing element has a data-block-id so captureSelection()
+    // can anchor highlights. Articles saved before the server-side block-ID fix
+    // have no IDs at all; this client-side pass fills the gap deterministically.
+    const BLOCK_SEL = "p,li,h1,h2,h3,h4,h5,h6,blockquote,pre,td,th,dt,dd,figcaption";
+    // Start counter AFTER any IDs already assigned server-side to avoid collisions
+    let bIdx = container.querySelectorAll("[data-block-id]").length;
+    container.querySelectorAll<Element>(BLOCK_SEL).forEach((el) => {
+      if (!el.hasAttribute("data-block-id")) el.setAttribute("data-block-id", `b${bIdx++}`);
+    });
+    // Also cover leaf <div>/<section> containers Readability sometimes emits
+    container.querySelectorAll<Element>("div,section").forEach((el) => {
+      if (el.hasAttribute("data-block-id")) return;
+      if (el.querySelector(BLOCK_SEL + ",div,section")) return; // not a leaf
+      if ((el.textContent ?? "").trim()) el.setAttribute("data-block-id", `b${bIdx++}`);
+    });
+
     container.querySelectorAll<HTMLImageElement>("img[data-src]").forEach((img) => {
       if (!img.src && img.dataset.src) img.src = img.dataset.src;
     });

@@ -139,6 +139,16 @@ function FloatingHighlighter({ onHighlight, onPress }: Props) {
 
   return (
     <>
+      {/* Transparent overlay — closes picker when user taps outside the ball/swatches.
+          z-index 9998 sits below ball (9999) and swatches (10001) so those elements
+          still receive pointer events first; only "empty" taps reach the overlay. */}
+      {showPicker && mounted && (
+        <div
+          onPointerDown={(e) => { e.stopPropagation(); setShowPicker(false); }}
+          style={{ position: "fixed", inset: 0, zIndex: 9998, background: "transparent" }}
+        />
+      )}
+
       {/* Colour swatches — arc animation via CSS custom props + @keyframes colorShoot */}
       {showPicker && mounted && COLORS.map((c, i) => {
         const [tx, ty] = arcs[i];
