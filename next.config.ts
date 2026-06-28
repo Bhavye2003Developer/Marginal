@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["pdfjs-dist"],
+  // pdfjs-dist is used only in client components (dynamic import), not on the server
 };
 
 export default nextConfig;

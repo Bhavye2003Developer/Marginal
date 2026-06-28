@@ -42,10 +42,15 @@ export async function POST(req: NextRequest) {
     let extracted;
     try {
       extracted = await extractArticle(body.url);
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error && err.message ? err.message : "Could not extract article";
-      return NextResponse.json({ error: message }, { status: 422 });
+    } catch {
+      // Graceful fallback: save article with URL as title, no content
+      let displayTitle = body.url;
+      try { displayTitle = new URL(body.url).hostname.replace(/^www\./, ""); } catch {}
+      extracted = {
+        title: displayTitle,
+        content: `<p>Could not extract article content. <a href="${body.url}" target="_blank" rel="noopener noreferrer">Open original page</a></p>`,
+        images: [] as Array<{ originalUrl: string; cachedUrl: null }>,
+      };
     }
 
     const content = assignBlockIds(extracted.content);

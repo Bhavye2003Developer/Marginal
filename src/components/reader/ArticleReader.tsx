@@ -1,9 +1,10 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import type { Article, Highlight } from "@/lib/types";
 import HighlightLayer from "./HighlightLayer";
 import ColorPicker from "./ColorPicker";
+import FloatingHighlighter from "./FloatingHighlighter";
 import NotePopover from "./NotePopover";
 import FocusMode from "./FocusMode";
 import TagInput from "@/components/ui/TagInput";
@@ -33,6 +34,22 @@ function getCharOffset(root: Element, container: Node, nodeOffset: number): numb
   return cur;
 }
 
+function captureSelection(): SelectionState | null {
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || !sel.rangeCount) return null;
+  const range = sel.getRangeAt(0);
+  const anchor = (range.startContainer.nodeType === Node.TEXT_NODE
+    ? (range.startContainer as Text).parentElement
+    : range.startContainer as Element
+  )?.closest("[data-block-id]");
+  if (!anchor) return null;
+  const blockId = anchor.getAttribute("data-block-id")!;
+  const startOffset = getCharOffset(anchor, range.startContainer, range.startOffset);
+  const endOffset = getCharOffset(anchor, range.endContainer, range.endOffset);
+  if (startOffset === endOffset) return null;
+  return { blockId, startOffset, endOffset, text: sel.toString(), rect: range.getBoundingClientRect() };
+}
+
 export default function ArticleReader({ article, highlights: initial }: Props) {
   const [highlights, setHighlights] = useState<Highlight[]>(initial);
   const [selection, setSelection] = useState<SelectionState | null>(null);
@@ -42,10 +59,12 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
   const [offlineSaved, setOfflineSaved] = useState(false);
   const [offlineSaving, setOfflineSaving] = useState(false);
 
-  // Check if this article is already cached, and listen for cache confirmation
+  // Stores the last valid selection — persists when floating ball is tapped
+  const selectionRef = useRef<SelectionState | null>(null);
+
+  // Check if this article is already cached
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
-
     const checkCached = async () => {
       const cache = await caches.open("marginal-reader-v1").catch(() => null);
       if (!cache) return;
@@ -53,7 +72,6 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
       setOfflineSaved(!!match);
     };
     checkCached();
-
     const handler = (e: MessageEvent) => {
       if (e.data?.type === "CACHE_DONE" && e.data.id === article.id) {
         setOfflineSaving(false);
@@ -63,6 +81,16 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
     navigator.serviceWorker.addEventListener("message", handler);
     return () => navigator.serviceWorker.removeEventListener("message", handler);
   }, [article.id]);
+
+  // Track selection continuously (works on mobile via selectionchange)
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const s = captureSelection();
+      if (s) selectionRef.current = s;
+    };
+    document.addEventListener("selectionchange", handleSelectionChange);
+    return () => document.removeEventListener("selectionchange", handleSelectionChange);
+  }, []);
 
   function toggleOffline() {
     if (!("serviceWorker" in navigator) || !navigator.serviceWorker.controller) return;
@@ -75,23 +103,18 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
     }
   }
 
+  // Desktop: show ColorPicker popup above selection on mouseup
   const handleMouseUp = useCallback(() => {
-    const sel = window.getSelection();
-    if (!sel || sel.isCollapsed || !sel.rangeCount) return;
-    const range = sel.getRangeAt(0);
-    const anchor = (range.startContainer.nodeType === Node.TEXT_NODE
-      ? (range.startContainer as Text).parentElement
-      : range.startContainer as Element
-    )?.closest("[data-block-id]");
-    if (!anchor) return;
-    const blockId = anchor.getAttribute("data-block-id")!;
-    const startOffset = getCharOffset(anchor, range.startContainer, range.startOffset);
-    const endOffset = getCharOffset(anchor, range.endContainer, range.endOffset);
-    setSelection({ blockId, startOffset, endOffset, text: sel.toString(), rect: range.getBoundingClientRect() });
+    const s = captureSelection();
+    if (s) setSelection(s);
   }, []);
 
-  async function saveHighlight(color: "yellow" | "green" | "blue" | "pink") {
-    if (!selection) return;
+  async function saveHighlight(
+    color: "yellow" | "green" | "blue" | "pink",
+    override?: SelectionState
+  ) {
+    const sel = override ?? selection;
+    if (!sel) return;
     try {
       const res = await fetch("/api/highlights", {
         method: "POST",
@@ -99,8 +122,14 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
         body: JSON.stringify({
           articleId: article.id,
           color,
-          text: selection.text,
-          anchor: { blockId: selection.blockId, startOffset: selection.startOffset, endOffset: selection.endOffset, page: null, rects: null },
+          text: sel.text,
+          anchor: {
+            blockId: sel.blockId,
+            startOffset: sel.startOffset,
+            endOffset: sel.endOffset,
+            page: null,
+            rects: null,
+          },
         }),
       });
       if (!res.ok) return;
@@ -108,8 +137,16 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
       setHighlights((prev) => [...prev, h]);
     } finally {
       setSelection(null);
+      selectionRef.current = null;
       window.getSelection()?.removeAllRanges();
     }
+  }
+
+  // Called by the floating ball — reads from selectionRef so selection survives the tap
+  async function handleFloatHighlight(color: "yellow" | "green" | "blue" | "pink") {
+    const sel = selectionRef.current;
+    if (!sel) return;
+    await saveHighlight(color, sel);
   }
 
   async function saveNote(id: string, note: string | null) {
@@ -160,7 +197,7 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
   return (
     <FocusMode active={focusMode} onToggle={() => setFocusMode((v) => !v)}>
       <div className="reader-wrap">
-        {/* Top bar: back + controls */}
+        {/* Top bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40, flexWrap: "wrap", gap: 8 }}>
           <Link
             href="/library"
@@ -230,7 +267,11 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
         </article>
 
         {selection && (
-          <ColorPicker rect={selection.rect} onSelect={saveHighlight} onDismiss={() => setSelection(null)} />
+          <ColorPicker
+            rect={selection.rect}
+            onSelect={(color) => saveHighlight(color)}
+            onDismiss={() => setSelection(null)}
+          />
         )}
         {activeHighlight && (
           <NotePopover
@@ -241,6 +282,9 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
           />
         )}
       </div>
+
+      {/* Floating highlight ball — always visible, works on mobile */}
+      <FloatingHighlighter onHighlight={handleFloatHighlight} />
     </FocusMode>
   );
 }

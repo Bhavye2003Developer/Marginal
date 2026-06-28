@@ -41,6 +41,30 @@ export default function HighlightLayer({ content, highlights, onHighlightClick }
     // overwrite our <mark> elements on re-render.
     container.innerHTML = content; // eslint-disable-line no-unsanitized/property
 
+    // Promote data-src → src for lazy-loaded images that survived extraction
+    container.querySelectorAll<HTMLImageElement>("img[data-src]").forEach((img) => {
+      if (!img.src && img.dataset.src) img.src = img.dataset.src;
+    });
+
+    // Hide broken images gracefully
+    container.querySelectorAll<HTMLImageElement>("img").forEach((img) => {
+      img.onerror = () => { img.style.display = "none"; };
+    });
+
+    // Render LaTeX/math with KaTeX auto-render
+    import("katex/contrib/auto-render").then(({ default: renderMathInElement }) => {
+      renderMathInElement(container, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "$", right: "$", display: false },
+          { left: "\\(", right: "\\)", display: false },
+          { left: "\\[", right: "\\]", display: true },
+        ],
+        throwOnError: false,
+      });
+    }).catch(() => {});
+
+    // Apply highlights
     for (const h of highlights) {
       if (!h.anchor.blockId || h.anchor.startOffset == null || h.anchor.endOffset == null) continue;
       const block = container.querySelector(`[data-block-id="${h.anchor.blockId}"]`);

@@ -21,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#5B5BD6" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" crossOrigin="anonymous" />
         {/* Runs before React hydration to prevent flash of wrong theme */}
         <script
           dangerouslySetInnerHTML={{

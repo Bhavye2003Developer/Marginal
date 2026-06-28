@@ -96,18 +96,27 @@ function isSslError(err: unknown): boolean {
   return /cert|ssl|tls|altname|principal|verify|handshake|pkix|x509/.test(text);
 }
 
-// Regex-based: rewrites relative img src/data-src to absolute URLs.
-// Avoids a second DOM parse on article content fragments.
+// Regex-based: rewrites relative img src to absolute, promotes data-src → src for lazy-loaded images.
 function resolveImageUrls(html: string, baseUrl: string): string {
-  return html
-    .replace(/(<img[^>]*?\s)(src)(\s*=\s*)(["'])([^"']*)\4/gi, (m, pre, attr, eq, q, src) => {
+  // Step 1: resolve relative src to absolute
+  let out = html.replace(
+    /(<img[^>]*?\s)(src)(\s*=\s*)(["'])([^"']*)\4/gi,
+    (m, pre, attr, eq, q, src) => {
       try { return `${pre}${attr}${eq}${q}${new URL(src, baseUrl).href}${q}`; }
       catch { return m; }
-    })
-    .replace(/(<img[^>]*?\s)(data-src)(\s*=\s*)(["'])([^"']*)\4/gi, (m, pre, attr, eq, q, src) => {
-      try { return `${pre}${attr}${eq}${q}${new URL(src, baseUrl).href}${q}`; }
-      catch { return m; }
-    });
+    }
+  );
+  // Step 2: for img elements without src, promote data-src → src so lazy images display
+  out = out.replace(/<img([^>]*)>/gi, (m, attrs) => {
+    if (/\bsrc\s*=/.test(attrs)) return m; // already has src, skip
+    const dsMatch = attrs.match(/\bdata-src\s*=\s*(["'])([^"']*)\1/i);
+    if (!dsMatch) return m;
+    try {
+      const abs = new URL(dsMatch[2], baseUrl).href;
+      return `<img${attrs} src="${abs}">`;
+    } catch { return m; }
+  });
+  return out;
 }
 
 function extractImages(

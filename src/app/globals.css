@@ -442,6 +442,19 @@ html, body { overflow-x: hidden; }
   .status-toggle-btn  { padding: 8px 18px; }
 }
 
+/* ── PDF text layer (transparent text for copy/select) ── */
+.pdf-text-layer {
+  pointer-events: auto;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.pdf-text-layer span {
+  color: transparent;
+  cursor: text;
+  transform-origin: 0 100%;
+}
+.pdf-text-layer span::selection { background: rgba(91,91,214,0.35); }
+
 /* ── Color picker tooltip ──────────────────────────────── */
 .color-picker-popup {
   background: var(--bg-card);
