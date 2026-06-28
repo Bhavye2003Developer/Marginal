@@ -82,14 +82,21 @@ export default function ArticleReader({ article, highlights: initial }: Props) {
     return () => navigator.serviceWorker.removeEventListener("message", handler);
   }, [article.id]);
 
-  // Track selection continuously (works on mobile via selectionchange)
+  // Track selection continuously — debounced so it doesn't fire on every cursor blink
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
     const handleSelectionChange = () => {
-      const s = captureSelection();
-      if (s) selectionRef.current = s;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const s = captureSelection();
+        if (s) selectionRef.current = s;
+      }, 80);
     };
-    document.addEventListener("selectionchange", handleSelectionChange);
-    return () => document.removeEventListener("selectionchange", handleSelectionChange);
+    document.addEventListener("selectionchange", handleSelectionChange, { passive: true });
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("selectionchange", handleSelectionChange);
+    };
   }, []);
 
   function toggleOffline() {
